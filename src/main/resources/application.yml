@@ -52,3 +52,18 @@ springdoc:
 # Configuration URLs for OpenAPI
 openapi:
   dev-url: http://localhost:8080
+
+keycloak:
+  auth-server-url: https://137.184.94.79:8443/auth
+  realm: Ibanking
+  resource: ibanking-backoffice
+  ssl-required: external
+  use-resource-role-mappings: true
+  verify-token-audience: true
+  credentials:
+    secret: your-client-secret
+  admin:
+    realm: Ibanking
+    username: admin
+    password: admin
+    client-id: ibanking-backoffice

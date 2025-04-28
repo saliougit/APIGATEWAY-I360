@@ -125,6 +125,10 @@ public class JwtUtil {
         return extractClaim(token, claims -> claims.get("prenom", String.class));
     }
 
+    public String extractEmail(String token) {
+        return extractClaim(token, claims -> claims.get("email", String.class));
+    }
+
     // Méthodes existantes conservées
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
