@@ -59,7 +59,7 @@ public class IBankingService {
         formData.add("grant_type", "password");
         formData.add("client_id", clientId);
         formData.add("username", "admin");
-        formData.add("password", "admin-password");
+        formData.add("password", "admin");
 
         String tokenUrl = String.format("%s/realms/%s/protocol/openid-connect/token", authServerUrl, realm);
 

@@ -61,7 +61,7 @@ keycloak:
   use-resource-role-mappings: true
   verify-token-audience: true
   credentials:
-    secret: your-client-secret
+    secret:
   admin:
     realm: Ibanking
     username: admin
