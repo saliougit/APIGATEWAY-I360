@@ -1,12 +1,23 @@
 package com.innov4africa.api_gateway.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Classe représentant une requête de paiement iShop
  */
+@Schema(description = "Requête pour effectuer un paiement via iShop")
 public class IShopPaymentRequest {
+    
+    @Schema(description = "Numéro de référence", example = "REF123456", required = true)
     private String numeros;
+    
+    @Schema(description = "Montant du paiement", example = "5000", required = true)
     private String montant;
+    
+    @Schema(description = "Identifiant de la commande", example = "CMD789", required = true)
     private String order;
+    
+    @Schema(description = "Code de paiement", example = "PAY456", required = true)
     private String code;
 
     public IShopPaymentRequest() {

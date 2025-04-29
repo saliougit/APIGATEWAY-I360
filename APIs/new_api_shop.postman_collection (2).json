@@ -1,0 +1,396 @@
+{
+	"info": {
+		"_postman_id": "58448331-f61c-453d-b8a2-8bba3baefbfd",
+		"name": "new_api_shop",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "http://localhost:18080/mobile-ws/product/all",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:18080/mobile-ws/product/all",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:18080/mobile-ws/product/type_boost",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:18080/mobile-ws/product/type_boost",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"type_boost"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:18080/mobile-ws/product/commande/recherche?email=p.kiemde&numeros=23883",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:18080/mobile-ws/product/commande/recherche?email=p.kiemde&numeros=23883",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"commande",
+						"recherche"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "p.kiemde"
+						},
+						{
+							"key": "numeros",
+							"value": "23883"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:18080/mobile-ws/product/interval?min=100&max=2000",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:18080/mobile-ws/product/interval?min=100&max=2000",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"interval"
+					],
+					"query": [
+						{
+							"key": "min",
+							"value": "100"
+						},
+						{
+							"key": "max",
+							"value": "2000"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:18080/mobile-ws/product/promo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:18080/mobile-ws/product/promo",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"promo"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:18080/mobile-ws/product/publicite?id=2",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:18080/mobile-ws/product/publicite?id=2&idCategorie=0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"publicite"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "2"
+						},
+						{
+							"key": "idCategorie",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:18080/mobile-ws/product/bestsell",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:18080/mobile-ws/product/bestsell",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"bestsell"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/favorislist",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 2,\n    \"next_offset\": 1,\n    \"language\": \"sapanesh\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/favorislist",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"favorislist"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/favorite",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"product_id\": 11,\n    \"user_id\":33,\n    \"language\": \"sapanesh\"\n    }"
+				},
+				"url": {
+					"raw": "http://localhost:8085/mobile-ws/product/favorite",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"mobile-ws",
+						"product",
+						"favorite"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/favorislist",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 2,\n    \"next_offset\": 1,\n    \"language\": \"sapanesh\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/favorislist",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"favorislist"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/favorite",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"product_id\": 11,\n    \"user_id\":33,\n    \"language\": \"sapanesh\"\n    }"
+				},
+				"url": {
+					"raw": "http://localhost:8085/mobile-ws/product/unfavorite",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"mobile-ws",
+						"product",
+						"unfavorite"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:18080/mobile-ws/product/publicite?id=1&idCategorie=0",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:18080/mobile-ws/product/publicite?id=1&idCategorie=0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"publicite"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "1"
+						},
+						{
+							"key": "idCategorie",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:18080/mobile-ws/product/topRated",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:18080/mobile-ws/product/topRated",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"topRated"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:18080/mobile-ws/product/publicite?id=2",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:18080/mobile-ws/product/publicite?id=2&idCategorie=0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"publicite"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "2"
+						},
+						{
+							"key": "idCategorie",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

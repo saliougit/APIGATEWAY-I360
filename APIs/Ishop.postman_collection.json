@@ -1,0 +1,2611 @@
+{
+	"info": {
+		"_postman_id": "bf50a3b8-6c62-1a08-7698-77d6b9dc4be1",
+		"name": "Officiel copy copy copy copy copy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/update_user_image",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "image",
+							"value": "",
+							"type": "file"
+						},
+						{
+							"key": "language",
+							"value": "fr",
+							"description": "la langue du produit",
+							"type": "text"
+						},
+						{
+							"key": "iduser",
+							"value": "8",
+							"description": "la value",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/update_user_image",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"update_user_image"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/update",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"sourou.kiemde@yahoo.fr\", \n    \"user_id\":16,\n    \"password\": \"karabrta\", \n    \"name\":\"karimade\",\n    \"language\": \"francais\",\n    \"mobile\":768845,\n    \"user_type\":\"Buyer\",\n    \"city_id\":1,\n    \"device_type\":\"android\", \n    \"device_token\":34\n   }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/update",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8085/mobile-ws/user/login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"p.kiemde@yahoo.fr\", \n    \"password\": \"Zongorasmata1\", \n    \"language\": \"francais\", \n    \"device_type\":\"android\", \n    \"device_token\":23465\n   }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/login",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/signup",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"krtthassoumuoipe.wonei@live.fr\",\n    \"password\":\"5\",\n    \"name\":\"karim\",\n    \"prenom\":\"prosper\",\n    \"language\": \"fr\",\n    \"mobile\":11168845,\n    \"user_type\":\"Buyer\",\n    \"adresse\":\" route des almadies\",\n    \"city_id\":1,\n    \"device_type\":\"android\", \n    \"device_token\":\"dcbnvn3783883883hfy\"\n   }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/signup",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/core/country",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/core/country",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"core",
+						"country"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/detail?user_id=3&product_id=14",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/detail?user_id=3&product_id=14",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"detail"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "3"
+						},
+						{
+							"key": "product_id",
+							"value": "14"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/core/category",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/core/category",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"core",
+						"category"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/core/souscategory?user_id=2",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/core/souscategory?category_id=2",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"core",
+						"souscategory"
+					],
+					"query": [
+						{
+							"key": "category_id",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/core/city?user_id=2&country_id=1&language=fr&next_offset=suivant",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/core/city?country_id=1&language=fr&next_offset=suivant",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"core",
+						"city"
+					],
+					"query": [
+						{
+							"key": "country_id",
+							"value": "1"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						},
+						{
+							"key": "next_offset",
+							"value": "suivant"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/favorite",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"product_id\": 11,\n    \"user_id\":33,\n    \"language\": \"sapanesh\"\n    }"
+				},
+				"url": {
+					"raw": "http://localhost:8085/mobile-ws/product/favorite",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"mobile-ws",
+						"product",
+						"favorite"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/list",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 2,\n    \"next_offset\": 0,\n    \"language\": \"sapanesh\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/list",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/add_update",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n    \"name\": \"PRoduce 1\",\n    \"description\": \"Product descriptionsi\",\n    \"username\": \"productionty\",\n    \"idcategory\":2,\n    \"iduser\":3,\n    \"price\": 22.2,\n    \"currency\": \"USD\",\n    \"address\": \"Pune, india\",\n    \"launch_selling\":\"Flash\",\n    \"market_type\": \"NEW\",\n    \"is_featured\": true,\n    \"share_url\": \"'http://www.google.com/test.png' // DYNAMIC\",\n    \"created_date\": \"Thu Oct 25 11:42:22 IST 2012\"\n    \n   }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/add_update",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"add_update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/delete_image",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"product_id\":8,\n  \"image_id\":20,\n  \"language\":\"fr\"\n}"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/delete_image",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"delete_image"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/delete",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"delete_id\":9,\n  \"user_id\":3,\n  \"language\":\"fr\"\n}"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/delete",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"delete"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/image",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "iduser",
+							"value": "2",
+							"type": "text"
+						},
+						{
+							"key": "idproduct",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "language",
+							"value": "fr",
+							"type": "text"
+						},
+						{
+							"key": "image",
+							"value": "",
+							"type": "file"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/image",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"image"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/favorislist",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 2,\n    \"next_offset\": 1,\n    \"language\": \"sapanesh\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/favorislist",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"favorislist"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/change_password",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"old_password\":\"Zongorasmata1\",\n  \"new_password\":\"Zongorasmata1\",\n  \"language\":\"fr\",\n  \"user_id\":2\n}"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/change_password",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"change_password"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/forgot_password",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email_id\":\"p.kiemde@yahoo.fr\",\n  \"language\":\"fr\"\n}"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/forgot_password",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"forgot_password"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/change_number",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"user_id\":2,\n  \"language\":\"fr\",\n  \"mobile_no\":22222\n}"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/change_number",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"change_number"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/card/add",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 25,\n    \"product_id\": 3,\n    \"quantity\":5,\n    \"language\": \"sapanesh\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/card/add",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"card",
+						"add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/card/mycard",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 25,\n    \"language\": \"sapanesh\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/card/mycard",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"card",
+						"mycard"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/card/search_product",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n    \"type\":\"recent\",\n    \"user_id\":2,\n    \"brand\":\"BMW\",\n    \"key_words\":\"uct\",\n    \"price\":500,\n    \"market_type\":\"NEW\",\n    \"next_offset\":0,\n    \"type_selling\":\"Flash\",\n    \"discount\":20,\n    \"language\":\"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://localhost:8085/mobile-ws/product/search_product",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"mobile-ws",
+						"product",
+						"search_product"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/card/update",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 25,\n    \"numeros\":1,\n    \"order_status\":\"Canceled\",\n    \"language\": \"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/card/update",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"card",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/add_addresse",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 24,\n    \"name\":\"adresse 1\",\n    \"contact_number\": 1,\n    \"email\":\"p.kiemde@yahoo.fr\",\n    \"adresse\":\"fass\",\n    \"latitude\":23.34444,\n    \"longitude\":34.64774,\n    \"pincode\":37737\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/add_addresse",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"add_addresse"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/list_addresse",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 25,\n    \"language\": \"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/list_addresse",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"list_addresse"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/delete_addresse",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"adresse_id\": 1,\n    \"user_id\": 25\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/delete_addresse",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"delete_addresse"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/reviews",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"product_id\": 3,\n    \"language\": \"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/reviews",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"reviews"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/write",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 24,\n    \"product_id\": 4,\n    \"order_id\":5,\n    \"texte\":\"bad producte\",\n    \"language\": \"fr\",\n    \"notes\":4\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/write",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"write"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/notification_list",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 2,\n    \"language\": \"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/notification_list",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"notification_list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/notification_unread_count",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 2,\n    \"notification_id\":1,\n    \"language\": \"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/notification_unread_count",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"notification_unread_count"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/notification_asread",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 2,\n    \"notification_id\":1,\n    \"language\": \"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/notification_asread",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"notification_asread"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/homes",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"user_id\":2,\n  \"language\":\"fr\"\n}"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/homes",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"homes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/unregister_device",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 12,\n    \"language\": \"fr\"\n    \n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/unregister_device",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"unregister_device"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/register_device",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 12,\n    \"device_token\": 34758,\n    \"device_type\": \"ios\",\n    \"language\": \"fr\"\n    \n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/register_device",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"register_device"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/verify_otp",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 33,\n    \"otp\": \"29400\",\n    \"mobile_no\":768845,\n    \"language\":\"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/verify_otp",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"verify_otp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/resend_otp",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 12,\n    \"language\":\"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/resend_otp",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"resend_otp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/social_login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"social_id\": 12345643542156,\n    \"social_type\":\"facebook\",\n    \"language\":\"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://localhost:8085/mobile-ws/user/social_login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"mobile-ws",
+						"user",
+						"social_login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/order_delete?order_id=4&language=fr",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/order_delete?order_id=4&language=fr",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"order_delete"
+					],
+					"query": [
+						{
+							"key": "order_id",
+							"value": "4"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/productbycategorie?categorie_id=3&language=fr",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/productbycategorie?categorie_id=3&language=fr",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"productbycategorie"
+					],
+					"query": [
+						{
+							"key": "categorie_id",
+							"value": "3"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/card/delete?product_id=3&user_id=25&language=fr",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/card/delete?product_id=3&user_id=25&language=fr",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"card",
+						"delete"
+					],
+					"query": [
+						{
+							"key": "product_id",
+							"value": "3"
+						},
+						{
+							"key": "user_id",
+							"value": "25"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/myorders?user_id=25&type=Pending",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/myorders?user_id=24&type=PENDING",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"myorders"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "24"
+						},
+						{
+							"key": "type",
+							"value": "PENDING"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/card/cardupdate",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 25,\n    \"product_id\": 17,\n    \"quantity\":5,\n    \"language\": \"sapanesh\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/card/cardupdate",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"card",
+						"cardupdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/place_order",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 25,\n    \"address_id\":3,\n    \"payment_mode\":\"COD\",\n    \"payment_transaction_id\": \"PAY-3UA59805RK5050732LJKHUOA\",\n    \"language\": \"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/place_order",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"place_order"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/search_product",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"sub_categ_id\": 3,\n    \"type\":\"recent\",\n    \"user_id\":2,\n    \"brand\":\"BMW\",\n    \"key_words\":\"uct\",\n    \"price\":500,\n    \"market_type\":\"NEW\",\n    \"next_offset\":0,\n    \"type_selling\":\"Flash\",\n    \"discount\":20,\n    \"language\":\"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/search_product",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"search_product"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/myorders?user_id=25&type=Pending",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/myorders?user_id=25&type=PENDING",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"myorders"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "25"
+						},
+						{
+							"key": "type",
+							"value": "PENDING"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/myorders?user_id=25&type=Past",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/myorders?user_id=56&type=Pending",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"myorders"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "56"
+						},
+						{
+							"key": "type",
+							"value": "Pending"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/orders_detail?user_id=23&order=127",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/orders_detail?user_id=23&order=12",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"orders_detail"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "23"
+						},
+						{
+							"key": "order",
+							"value": "12"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/myorders_seller?user_id=39&type=Pending",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/myorders_seller?user_id=39&type=PENDING",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"myorders_seller"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "39"
+						},
+						{
+							"key": "type",
+							"value": "PENDING"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/add",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n    \"name\": \"PRoduce 1\",\n    \"description\": \"Product descriptionsiter\",\n    \"username\": \"productionty\",\n    \"sub_category_id\":2,\n    \"iduser\":3,\n    \"price\": 22.2,\n    \"currency\": \"USD\",\n    \"address\": \"Pune, india\",\n    \"launch_selling\":\"Flash\",\n    \"market_type\": \"NEW\",\n    \"is_featured\": true,\n    \"offer\":\"All\",\n    \"city_id\":1,\n    \"share_url\": \"'http://www.google.com/test.png' // DYNAMIC\",\n    \"created_date\": \"Thu Oct 25 11:42:22 IST 2012\",\n    \"launch_selling_fields\": [\n    {\n      \"datedefin\": \"2018-03-22\"\n    },\n    {\n      \"datededebut\": \"2018-03-22\n    }\n    ]\n    \n   }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/add",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/update",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n    \"name\": \"PRoduce 1\",\n    \"description\": \"Product descriptionsi\",\n    \"username\": \"productionty\",\n    \"sub_category_id\":2,\n    \"iduser\":3,\n    \"price\": 22.2,\n    \"currency\": \"USD\",\n    \"address\": \"Pune, india\",\n    \"launch_selling\":\"Flash\",\n    \"market_type\": \"NEW\",\n    \"is_featured\": true,\n    \"offer\":\"All\",\n    \"city_id\":1,\n    \"product_id\":11,\n    \"share_url\": \"'http://www.google.com/test.png' // DYNAMIC\",\n    \"created_date\": \"Thu Oct 25 11:42:22 IST 2012\"\n    \n   }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/update",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/myorders_delivrer?user_id=4&type=Pending&language=fr",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/myorders_delivrer?user_id=3&type=PENDING&language=fr",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"myorders_delivrer"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "3"
+						},
+						{
+							"key": "type",
+							"value": "PENDING"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/myorders_paiement?user_id=3&language=fr",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/myorders_paiement?user_id=3&language=fr",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"myorders_paiement"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "3"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/market_maker_invitation",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"address_list\": [\"p.kiemde@yahoo.fr\", \"ilo@esp.sn\"], \n    \"user_id\": 33, \n    \"language\": \"francais\"\n    \n   }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/market_maker_invitation",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"market_maker_invitation"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/market_maker/myparticipants?user_id=33&language=fr",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/market_maker/myparticipants?user_id=33&language=fr",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"market_maker",
+						"myparticipants"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "33"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/product_by_boost",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"boost_id\":1,\n  \"user_id\":25,\n  \"language\":\"fr\"\n}"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/product_by_boost",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"product_by_boost"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/add_boost",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"id_prode\":14,\n  \"id_pube\":1,\n  \"language\":\"fr\"\n}"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/add_boost",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"add_boost"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/boost_form?boost_id=1",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/boost_form?boost_id=1&language=fr",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"boost_form"
+					],
+					"query": [
+						{
+							"key": "boost_id",
+							"value": "1"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/type_boost",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/type_boost",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"type_boost"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/allprofiles?user_id=31",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/allprofiles?user_id=31&language=fr",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"allprofiles"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "31"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/media_slide",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/media_slide",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"media_slide"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/typevente_menu_contextuelle?id_typevente=12",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/typevente_menu_contextuelle?id_typevente=2",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"typevente_menu_contextuelle"
+					],
+					"query": [
+						{
+							"key": "id_typevente",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Untitled Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/type_sellingproduct",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/type_sellingproduct",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"type_sellingproduct"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/list_addresse_seller",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 24,\n    \"language\": \"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/list_addresse_seller",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"list_addresse_seller"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/add_addresse_seller",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 24,\n    \"name\":\"adresse 1\",\n    \"contact_number\": 1,\n    \"email\":\"p.kiemde@yahoo.fr\",\n    \"adresse\":\"fass\",\n    \"latitude\":23.34444,\n    \"longitude\":34.64774,\n    \"pincode\":37737\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/add_addresse_seller",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"add_addresse_seller"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/place_order/direct",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"address_id\":3,\n    \"payment_mode\":\"COD\",\n    \"payment_transaction_id\": \"PAY-3UA59805RK5050732LJKHUOA\",\n    \"user_id\": 25,\n    \"product_id\": 3,\n    \"quantity\":5,\n    \"language\": \"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/place_order/direct",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"place_order",
+						"direct"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/user/become/seller?user_id=77&language=fr",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/user/become/seller?user_id=77&language=fr",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"become",
+						"seller"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "77"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/modifier/quantite?id_product=45&quantity=12&language=fr",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/modifier/quantite?id_product=45&quantity=12&language=fr",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"modifier",
+						"quantite"
+					],
+					"query": [
+						{
+							"key": "id_product",
+							"value": "45"
+						},
+						{
+							"key": "quantity",
+							"value": "12"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/related?id_product=144&user_id=12&language=fr",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/related?id_product=144&user_id=12&language=fr",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"related"
+					],
+					"query": [
+						{
+							"key": "id_product",
+							"value": "144"
+						},
+						{
+							"key": "user_id",
+							"value": "12"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/search_param",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n    \"type\":\"recent\",\n    \"keywords\":\"speciale\",\n    \"language\":\"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/search_param",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"search_param"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/update/paypal",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n   \"trans_id\":\"34775885858858\",\n   \"mode_payment\":\"COD\",\n   \"order_id\":\"120\"\n   }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/update/paypal",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"update",
+						"paypal"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://50.116.97.25:8080/mobile-ws/product/search_product_web",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n    \"type\":\"recent\",\n    \"user_id\":2,\n    \"brand\":\"BMW\",\n    \"sub_categ_id\":0,\n    \"price\":50000,\n    \"market_type\":\"\",\n    \"next_offset\":0,\n    \"type_selling\":\"\",\n    \"language\":\"fr\"\n    }"
+				},
+				"url": {
+					"raw": "http://50.116.97.25:8080/mobile-ws/product/search_product_web",
+					"protocol": "http",
+					"host": [
+						"50",
+						"116",
+						"97",
+						"25"
+					],
+					"port": "8080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"search_product_web"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://ibusinesscompanies.com:18080mobile-ws/user/create/automatique",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nom\": \"fallamamy11@gmail.com\",\n    \"prenom\":\"guillaume\",\n    \"numero\":\"230475\"\n   }"
+				},
+				"url": {
+					"raw": "http://ibusinesscompanies.com:18080/mobile-ws/user/create/automatique",
+					"protocol": "http",
+					"host": [
+						"ibusinesscompanies",
+						"com"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"create",
+						"automatique"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://ibusinesscompanies.com:18080/mobile-ws/user/checknumber?numero=221784643202",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://ibusinesscompanies.com:18080/mobile-ws/user/checknumber?numero=221784643202",
+					"protocol": "http",
+					"host": [
+						"ibusinesscompanies",
+						"com"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"user",
+						"checknumber"
+					],
+					"query": [
+						{
+							"key": "numero",
+							"value": "221784643202"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://ibusinesscompanies.com:18080/mobile-ws/product/seller/paiement?id=5&language=fr",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://ibusinesscompanies.com:18080/mobile-ws/product/seller/paiement?id=5&language=fr",
+					"protocol": "http",
+					"host": [
+						"ibusinesscompanies",
+						"com"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"seller",
+						"paiement"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "5"
+						},
+						{
+							"key": "language",
+							"value": "fr"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://ibusinesscompanies.com:18080/mobile-ws/product/media_slide_detail",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://ibusinesscompanies.com:18080/mobile-ws/product/media_slide_detail",
+					"protocol": "http",
+					"host": [
+						"ibusinesscompanies",
+						"com"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"media_slide_detail"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://ibusinesscompanies.com:18080/product/message/diffuse?title=produit&message=message",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://ibusinesscompanies.com:18080/mobile-ws/product/message/diffuse?title=produit&message=message",
+					"protocol": "http",
+					"host": [
+						"ibusinesscompanies",
+						"com"
+					],
+					"port": "18080",
+					"path": [
+						"mobile-ws",
+						"product",
+						"message",
+						"diffuse"
+					],
+					"query": [
+						{
+							"key": "title",
+							"value": "produit"
+						},
+						{
+							"key": "message",
+							"value": "message"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

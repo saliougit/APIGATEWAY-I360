@@ -11,6 +11,10 @@ import reactor.core.publisher.Mono;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import com.innov4africa.api_gateway.model.IBankingTokenResponse;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class IBankingService {
@@ -114,6 +118,57 @@ public class IBankingService {
             .onErrorResume(e -> {
                 logger.error("Erreur lors de la recherche: {}", e.getMessage());
                 return Mono.just(false);
+            });
+    }
+
+    public Mono<Boolean> createUser(String email, String telephone, String firstName, String lastName, String password) {
+        logger.info("Création d'un utilisateur - email: {}, telephone: {}, nom: {}, prénom: {}", 
+                   email, telephone, lastName, firstName);
+        
+        return getAdminToken()
+            .flatMap(token -> {
+                String createUrl = String.format("%s/admin/realms/%s/users", authServerUrl, realm);
+                
+                // Construire le corps de la requête pour la création d'utilisateur
+                Map<String, Object> userData = new HashMap<>();
+                userData.put("username", email);
+                userData.put("email", email);
+                userData.put("firstName", firstName);
+                userData.put("lastName", lastName);
+                userData.put("enabled", true);
+                userData.put("emailVerified", true);
+                
+                // Ajouter les attributs personnalisés
+                Map<String, List<String>> attributes = new HashMap<>();
+                if (telephone != null && !telephone.isBlank()) {
+                    attributes.put("phone", Collections.singletonList(telephone));
+                }
+                userData.put("attributes", attributes);
+                
+                // Utiliser le même mot de passe que iPay
+                Map<String, Object> credential = new HashMap<>();
+                credential.put("type", "password");
+                credential.put("value", password);
+                credential.put("temporary", false);  // Mot de passe non temporaire puisque c'est celui de l'utilisateur
+                userData.put("credentials", Collections.singletonList(credential));
+                
+                logger.info("Création de l'utilisateur - URL: {}", createUrl);
+                
+                return webClient.post()
+                    .uri(createUrl)
+                    .header("Authorization", "Bearer " + token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(userData)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .map(response -> {
+                        logger.info("Utilisateur créé avec succès");
+                        return true;
+                    })
+                    .onErrorResume(e -> {
+                        logger.error("Erreur lors de la création de l'utilisateur: {}", e.getMessage());
+                        return Mono.just(false);
+                    });
             });
     }
 }
