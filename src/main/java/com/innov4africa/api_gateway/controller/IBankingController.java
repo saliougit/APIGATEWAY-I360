@@ -24,46 +24,17 @@ public class IBankingController {
 
     @GetMapping("/user-check")
     public Mono<ResponseEntity<IBankingUserCheckResponse>> checkUser(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String telephone) {
         
-        // 1. Vérification de la présence du header Authorization
-        if (authHeader == null || authHeader.isBlank()) {
-            logger.warn("Tentative de vérification sans header Authorization");
-            return Mono.just(ResponseEntity.status(401).body(
-                new IBankingUserCheckResponse("error", "Token d'authentification manquant", false)
-            ));
-        }
+        logger.info("Vérification utilisateur - email: {}, telephone: {}", email, telephone);
 
-        // 2. Vérification du format Bearer
-        if (!authHeader.startsWith("Bearer ")) {
-            logger.warn("Format de token invalide: {}", authHeader);
-            return Mono.just(ResponseEntity.status(401).body(
-                new IBankingUserCheckResponse("error", "Format de token invalide", false)
-            ));
-        }
-
-        String jwt = authHeader.substring(7);
-        
-        // 3. Validation du token JWT
-        if (!jwtUtil.validateToken(jwt)) {
-            logger.warn("Token JWT invalide ou expiré");
-            return Mono.just(ResponseEntity.status(401).body(
-                new IBankingUserCheckResponse("error", "Token invalide ou expiré", false)
-            ));
-        }
-
-        // 4. Extraction des informations nécessaires du JWT
-        String email = jwtUtil.extractEmail(jwt);
-        String telephone = jwtUtil.extractTelephone(jwt);
-
-        if (email == null && telephone == null) {
-            logger.warn("Token ne contient pas d'email ni de téléphone");
+        if ((email == null || email.isBlank()) && (telephone == null || telephone.isBlank())) {
             return Mono.just(ResponseEntity.badRequest().body(
-                new IBankingUserCheckResponse("error", "Informations d'identification manquantes", false)
+                new IBankingUserCheckResponse("error", "Email ou téléphone requis", false)
             ));
         }
 
-        // 5. Vérification de l'existence de l'utilisateur
         return iBankingService.verifyUserExists(email, telephone)
             .map(exists -> {
                 String message = exists ? 

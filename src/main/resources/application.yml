@@ -54,16 +54,13 @@ openapi:
   dev-url: http://localhost:8080
 
 keycloak:
-  auth-server-url: https://137.184.94.79:8443/auth
-  realm: Ibanking
-  resource: ibanking-backoffice
-  ssl-required: external
+  auth-server-url: ${KEYCLOAK_SERVER_URL:https://137.184.94.79:8443/auth}
+  realm: ${KEYCLOAK_REALM:Ibanking}
+  resource: ${KEYCLOAK_CLIENT_ID:ibanking-backoffice}
+  public-client: true
   use-resource-role-mappings: true
-  verify-token-audience: true
-  credentials:
-    secret:
+  bearer-only: true
+  ssl-required: external
   admin:
-    realm: Ibanking
-    username: admin
-    password: admin
-    client-id: ibanking-backoffice
+    username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+    password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
