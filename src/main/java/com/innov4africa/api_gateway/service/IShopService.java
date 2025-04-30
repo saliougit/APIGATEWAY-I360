@@ -1,13 +1,15 @@
 package com.innov4africa.api_gateway.service;
 
-import com.innov4africa.api_gateway.model.IShopLoginRequest;
-import com.innov4africa.api_gateway.model.IShopLoginResponse;
-import com.innov4africa.api_gateway.model.IShopErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.innov4africa.api_gateway.model.IShopErrorResponse;
+import com.innov4africa.api_gateway.model.IShopLoginRequest;
+import com.innov4africa.api_gateway.model.IShopLoginResponse;
+
 import reactor.core.publisher.Mono;
 
 @Service
@@ -22,7 +24,7 @@ public class IShopService {
         this.webClient = webClientBuilder.build();
     }
 
-    public Mono<Object> testLogin(IShopLoginRequest request) {
+    public Mono<Object> login(IShopLoginRequest request) {
         String url = baseUrl + "/mobile-ws/user/login";
         logger.info("Tentative d'authentification i-shop pour l'utilisateur: {} vers {}", 
             request.getEmail(), baseUrl);
@@ -40,7 +42,6 @@ public class IShopService {
                         "403"
                     );
                 }
-                // On préserve toutes les données de la réponse sans modification
                 return response;
             })
             .doOnNext(response -> {

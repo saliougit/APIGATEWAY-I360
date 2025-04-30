@@ -1,16 +1,21 @@
 package com.innov4africa.api_gateway.controller;
 
-import com.innov4africa.api_gateway.model.IShopLoginRequest;
-import com.innov4africa.api_gateway.model.IShopErrorResponse;
-import com.innov4africa.api_gateway.service.IShopService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.innov4africa.api_gateway.model.IShopErrorResponse;
+import com.innov4africa.api_gateway.model.IShopLoginRequest;
+import com.innov4africa.api_gateway.service.IShopService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/ishop")
@@ -22,13 +27,21 @@ public class IShopController {
     @Autowired
     private IShopService iShopService;
 
-    @Operation(summary = "Tester l'authentification i-shop",
-              description = "Vérifie les identifiants de connexion auprès du service i-shop")
-    @PostMapping("/test-login")
-    public Mono<ResponseEntity<Object>> testLogin(@RequestBody IShopLoginRequest request) {
-        logger.info("Test de login i-shop reçu pour: {}", request.getEmail());
+    @Operation(summary = "Authentification i-shop",
+              description = "Authentifie un utilisateur auprès du service i-shop")
+    @PostMapping("/login")
+    public Mono<ResponseEntity<Object>> login(@RequestBody IShopLoginRequest request) {
+        logger.info("Login i-shop reçu pour: {}", request.getEmail());
         
-        return iShopService.testLogin(request)
+        // Validation des champs obligatoires
+        if (request.getEmail() == null || request.getEmail().isBlank() ||
+            request.getPassword() == null || request.getPassword().isBlank()) {
+            return Mono.just(ResponseEntity.badRequest().body(
+                new IShopErrorResponse("error", "Email et mot de passe requis", "400")
+            ));
+        }
+        
+        return iShopService.login(request)
             .map(response -> {
                 if (response instanceof IShopErrorResponse) {
                     // Si c'est une erreur, on renvoie un 403
@@ -39,7 +52,7 @@ public class IShopController {
                 }
             })
             .onErrorResume(e -> {
-                logger.error("Erreur lors du test de login i-shop", e);
+                logger.error("Erreur lors du login i-shop", e);
                 return Mono.just(ResponseEntity
                     .status(500)
                     .body(new IShopErrorResponse(
