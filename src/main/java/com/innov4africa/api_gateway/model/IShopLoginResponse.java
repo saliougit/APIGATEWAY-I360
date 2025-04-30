@@ -25,7 +25,7 @@ public class IShopLoginResponse {
     private Integer fidelity_point;
     private Integer credit;
     private Integer count_notification;
-    private List<String> domaineList;
+    private List<DomaineResponse> domaineList;
     private Integer total_reviews;
     private String preferred_language_code;
     private String preferred_currency;
@@ -194,11 +194,11 @@ public class IShopLoginResponse {
         this.count_notification = count_notification;
     }
 
-    public List<String> getDomaineList() {
+    public List<DomaineResponse> getDomaineList() {
         return domaineList;
     }
 
-    public void setDomaineList(List<String> domaineList) {
+    public void setDomaineList(List<DomaineResponse> domaineList) {
         this.domaineList = domaineList;
     }
 

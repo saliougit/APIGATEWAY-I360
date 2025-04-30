@@ -66,4 +66,4 @@ keycloak:
     password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
 
 ishop:
-  base-url: http://50.116.97.25:8080
+  base-url: https://ibusinesscompanies.com:8443

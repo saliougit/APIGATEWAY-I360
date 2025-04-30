@@ -34,16 +34,22 @@ public class IShopService {
             .bodyToMono(IShopLoginResponse.class)
             .map(response -> {
                 if (!"success".equals(response.getStatus())) {
-                    // En cas d'erreur, on retourne un IShopErrorResponse
                     return new IShopErrorResponse(
                         "error",
                         response.getMessage(),
                         "403"
                     );
                 }
-                // En cas de succès, on retourne la réponse complète
-                response.setCode("200");
+                // On préserve toutes les données de la réponse sans modification
                 return response;
+            })
+            .doOnNext(response -> {
+                if (response instanceof IShopLoginResponse) {
+                    IShopLoginResponse loginResponse = (IShopLoginResponse) response;
+                    logger.debug("Réponse i-shop reçue pour l'utilisateur {}: user_id={}, domaines={}", 
+                        request.getEmail(), loginResponse.getUser_id(), 
+                        loginResponse.getDomaineList() != null ? loginResponse.getDomaineList().size() : 0);
+                }
             })
             .onErrorResume(e -> {
                 logger.error("Erreur lors de l'authentification i-shop", e);
