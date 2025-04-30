@@ -64,3 +64,6 @@ keycloak:
   admin:
     username: ${KEYCLOAK_ADMIN_USERNAME:admin}
     password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+
+ishop:
+  base-url: http://50.116.97.25:8080

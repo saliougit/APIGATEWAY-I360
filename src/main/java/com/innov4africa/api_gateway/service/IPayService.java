@@ -1,30 +1,32 @@
 package com.innov4africa.api_gateway.service;
 
+import java.io.StringReader;
+import java.time.Duration;
+
+import javax.net.ssl.SSLException;
+import javax.xml.namespace.NamespaceContext;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+
 import com.innov4africa.api_gateway.model.AuthResult;
 import com.innov4africa.api_gateway.repository.UserSessionRepository;
 
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-import javax.net.ssl.SSLException;
-import javax.xml.namespace.NamespaceContext;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
-import java.time.Duration;
-
-import java.io.StringReader;
 import reactor.netty.http.client.HttpClient;
 
 @Service
