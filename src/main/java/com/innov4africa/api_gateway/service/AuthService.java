@@ -46,404 +46,91 @@ public class AuthService {
     public Mono<AuthResponse> authenticate(AuthRequest request) {
         String email = request.getEmail();
         String password = request.getPassword();
-    
-        return ipayService.authenticate(email, password)
-            .flatMap(authResult -> {
-                if (isSessionEnCours(authResult)) {
-                    logger.info("Session déjà en cours détectée pour: {}", email);
-                    return forceDisconnectAndReconnect(authResult.getToken(), email, password);
-                } 
-                else if (authResult.isSuccess()) {
-                    logger.info("Authentification réussie pour: {}", email);
-                    return processSuccessfulAuthentication(authResult, email, password);
-                } 
-                else {
-                    logger.warn("Erreur d'authentification pour: {}: {}", email, authResult.getMessage());
+
+        // Lancer iPay et iShop en parallèle
+        Mono<AuthResult> ipayMono = ipayService.authenticate(email, password);
+        Mono<com.innov4africa.api_gateway.model.IShopLoginResponse> ishopMono = iShopService.login(new IShopLoginRequest(email, password));
+
+        return Mono.zip(ipayMono, ishopMono)
+            .flatMap(tuple -> {
+                AuthResult authResult = tuple.getT1();
+                com.innov4africa.api_gateway.model.IShopLoginResponse ishopResponse = tuple.getT2();
+
+                // Vérifier le succès iPay
+                if (!authResult.isSuccess()) {
                     return Mono.just(buildErrorResponse(authResult.getMessage()));
                 }
+
+                boolean ishopSuccess = ishopResponse != null && "success".equalsIgnoreCase(ishopResponse.getStatus());
+                boolean isSeller = ishopSuccess && ishopResponse.getUser_type() != null && "Seller".equalsIgnoreCase(ishopResponse.getUser_type());
+
+                String ipayToken = authResult.getToken();
+                String telephone = authResult.getTelephone();
+                String userId = authResult.getIduser();
+                // String ipayAccountId = authResult.
+
+                // Sauvegarder la session iPay
+                if (ipayToken != null && (userId != null || telephone != null)) {
+                    userSessionRepository.saveUserSession(ipayToken, userId, telephone);
+                }
+
+                // Préparer la liste des statuts de service
+                List<ServiceStatus> services = new ArrayList<>();
+                services.add(new ServiceStatus("i-pay", true, "Authentification iPay réussie"));
+                if (ishopSuccess) {
+                    services.add(new ServiceStatus("i-shop", true, isSeller ? "Compte seller iShop validé" : "Compte buyer iShop"));
+                } else {
+                    String ishopMsg = (ishopResponse != null && ishopResponse.getMessage() != null) ? ishopResponse.getMessage() : "Erreur d'authentification iShop";
+                    services.add(new ServiceStatus("i-shop", false, ishopMsg));
+                }
+
+                // Vérifier/créer e-banking (en asynchrone, mais attendre pour la réponse)
+                return iBankingService.verifyUserExists(email, telephone)
+                    .flatMap(existsInIBanking -> {
+                        if (!existsInIBanking) {
+                            return iBankingService.createUser(
+                                email,
+                                telephone,
+                                authResult.getPrenom(),
+                                authResult.getNom(),
+                                password
+                            ).map(created -> {
+                                services.add(new ServiceStatus("i-banking", created, created ? "Compte iBanking créé avec succès" : "Échec de la création du compte iBanking"));
+                                return buildFinalAuthResponse(email, ipayToken, telephone, userId, ishopSuccess, isSeller, ishopResponse, services);
+                            });
+                        } else {
+                            services.add(new ServiceStatus("i-banking", true, "Compte iBanking disponible"));
+                            return Mono.just(buildFinalAuthResponse(email, ipayToken, telephone, userId, ishopSuccess, isSeller, ishopResponse, services));
+                        }
+                    })
+                    .onErrorResume(e -> {
+                        logger.error("Erreur lors de la vérification/création iBanking", e);
+                        services.add(new ServiceStatus("i-banking", false, "Service iBanking temporairement indisponible"));
+                        return Mono.just(buildFinalAuthResponse(email, ipayToken, telephone, userId, ishopSuccess, isSeller, ishopResponse, services));
+                    });
             })
             .onErrorResume(e -> {
-                logger.error("Erreur technique lors de l'authentification pour: {}", email, e);
+                logger.error("Erreur technique lors de l'authentification SSO", e);
                 return Mono.just(buildErrorResponse("Erreur technique: " + e.getMessage()));
             });
     }
 
-    private boolean isSessionEnCours(AuthResult authResult) {
-        return authResult.getMessage() != null && 
-               authResult.getMessage().contains("session en cours") &&
-               authResult.getToken() != null;
-    }
-
-    // private Mono<AuthResponse> processSuccessfulAuthentication(AuthResult authResult, String email, String password) {
-    //     String ipayToken = authResult.getToken();
-    //     String telephone = authResult.getTelephone();
-    //     String userId = authResult.getIduser();
-        
-    //     // Sauvegarder les informations de session iPay
-    //     if (ipayToken != null && (userId != null || telephone != null)) {
-    //         userSessionRepository.saveUserSession(ipayToken, userId, telephone);
-    //     }
-
-    //     // Vérifier l'existence dans iBanking et créer si nécessaire
-    //     return iBankingService.verifyUserExists(email, telephone)
-    //         .flatMap(existsInIBanking -> {
-    //             List<ServiceStatus> services = new ArrayList<>();
-    //             services.add(new ServiceStatus("i-pay", true, authResult.getMessage()));
-                
-    //             if (!existsInIBanking) {
-    //                 // Créer le compte iBanking avec les mêmes credentials
-    //                 return iBankingService.createUser(
-    //                     email, 
-    //                     telephone, 
-    //                     authResult.getPrenom(),
-    //                     authResult.getNom(),
-    //                     password  // Utiliser le même mot de passe que iPay
-    //                 ).flatMap(created -> {
-    //                     String ibankingMessage = created ? 
-    //                         "Compte iBanking créé avec succès" : 
-    //                         "Échec de la création du compte iBanking";
-    //                     services.add(new ServiceStatus("i-banking", created, ibankingMessage));
-
-    //                     // Appel à iShop après iPay et iBanking
-    //                     return authenticateWithIShop(email, password, services, ipayToken, telephone, userId);
-    //                 });
-    //             } else {
-    //                 // Le compte existe déjà
-    //                 services.add(new ServiceStatus("i-banking", true, "Compte iBanking disponible"));
-                    
-    //                 // Appel à iShop après iPay et iBanking
-    //                 return authenticateWithIShop(email, password, services, ipayToken, telephone, userId);
-    //             }
-    //         })
-    //         .onErrorResume(e -> {
-    //             logger.error("Erreur lors de la vérification/création iBanking", e);
-    //             List<ServiceStatus> services = new ArrayList<>();
-    //             services.add(new ServiceStatus("i-pay", true, authResult.getMessage()));
-    //             services.add(new ServiceStatus("i-banking", false, "Service iBanking temporairement indisponible"));
-                
-    //             // Appel à iShop malgré l'erreur iBanking
-    //             return authenticateWithIShop(email, password, services, ipayToken, telephone, userId);
-    //         });
-    // }
-    private Mono<AuthResponse> processSuccessfulAuthentication(AuthResult authResult, String email, String password) {
-    String ipayToken = authResult.getToken();
-    String telephone = authResult.getTelephone();
-    String userId = authResult.getIduser();
-    
-    // Sauvegarder les informations de session iPay
-    if (ipayToken != null && (userId != null || telephone != null)) {
-        userSessionRepository.saveUserSession(ipayToken, userId, telephone);
-    }
-
-    // Vérifier l'existence dans iBanking et créer si nécessaire
-    return iBankingService.verifyUserExists(email, telephone)
-        .flatMap(existsInIBanking -> {
-            List<ServiceStatus> services = new ArrayList<>();
-            services.add(new ServiceStatus("i-pay", true, "Authentification success"));
-            
-            if (!existsInIBanking) {
-                // Créer le compte iBanking avec les mêmes credentials
-                return iBankingService.createUser(
-                    email, 
-                    telephone, 
-                    authResult.getPrenom(),
-                    authResult.getNom(),
-                    password
-                ).flatMap(created -> {
-                    String ibankingMessage = created ? 
-                        "Compte iBanking créé avec succès" : 
-                        "Échec de la création du compte iBanking";
-                    services.add(new ServiceStatus("i-banking", created, ibankingMessage));
-
-                    // Appel à iShop après iPay et iBanking
-                    return authenticateWithIShop(email, password, services, ipayToken, telephone, userId);
-                });
-            } else {
-                // Le compte existe déjà
-                services.add(new ServiceStatus("i-banking", true, "Compte iBanking disponible"));
-                
-                // Appel à iShop après iPay et iBanking
-                return authenticateWithIShop(email, password, services, ipayToken, telephone, userId);
-            }
-        })
-        .onErrorResume(e -> {
-            logger.error("Erreur lors de la vérification/création iBanking", e);
-            List<ServiceStatus> services = new ArrayList<>();
-            services.add(new ServiceStatus("i-pay", true, "Authentification success"));
-            services.add(new ServiceStatus("i-banking", false, "Service iBanking temporairement indisponible"));
-            
-            // Appel à iShop malgré l'erreur iBanking
-            return authenticateWithIShop(email, password, services, ipayToken, telephone, userId);
-        });
-}
-    
-    // private Mono<AuthResponse> authenticateWithIShop(String email, String password, 
-    //                                                List<ServiceStatus> services, 
-    //                                                String ipayToken, String telephone, String userId) {
-    //     IShopLoginRequest loginRequest = new IShopLoginRequest(email, password);
-    //     return iShopService.login(loginRequest)
-    //         .flatMap(iShopResponse -> {
-    //             boolean iShopSuccess = iShopResponse != null && iShopResponse.getStatus() != null && 
-    //                                   iShopResponse.getStatus().equals("success");
-                
-    //             if (iShopSuccess) {
-    //                 services.add(new ServiceStatus("i-shop", true, "Authentification iShop réussie"));
-                    
-    //                 // Vérifier si l'utilisateur est un vendeur
-    //                 boolean isSeller = false;
-    //                 if (iShopResponse.getUser_type() != null && 
-    //                     iShopResponse.getSeller_type() != null && 
-    //                     !iShopResponse.getSeller_type().isEmpty()) {
-    //                     isSeller = true;
-    //                 }
-                    
-    //                 // Créer un IShopInfo à partir de la réponse
-    //                 IShopInfo ishopInfo = null;
-    //                 if (iShopSuccess) {
-    //                     ishopInfo = IShopInfo.fromLoginResponse(iShopResponse);
-    //                 }
-                    
-    //                 // Générer le token JWT avec toutes les informations
-    //                 String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-                    
-    //                 // Construire la réponse complète
-    //                 return Mono.just(new AuthResponse("success", "Authentification réussie", 
-    //                                                  jwtToken, services, isSeller, ishopInfo));
-    //             } else {
-    //                 // L'authentification iShop a échoué mais iPay est réussie
-    //                 String errorMessage = iShopResponse != null ? 
-    //                                      iShopResponse.getMessage() : "Erreur d'authentification iShop";
-    //                 services.add(new ServiceStatus("i-shop", false, errorMessage));
-                    
-    //                 // Générer le token JWT avec les informations iPay seulement
-    //                 String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-                    
-    //                 return Mono.just(new AuthResponse("success", "Authentification iPay réussie", 
-    //                                                  jwtToken, services));
-    //             }
-    //         })
-    //         .onErrorResume(e -> {
-    //             logger.error("Erreur lors de l'authentification iShop", e);
-    //             services.add(new ServiceStatus("i-shop", false, "Service iShop temporairement indisponible"));
-                
-    //             // Générer le token JWT avec les informations iPay seulement
-    //             String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-                
-    //             return Mono.just(new AuthResponse("success", "Authentification iPay réussie", 
-    //                                              jwtToken, services));
-    //         });
-    // }
-
-    // private Mono<AuthResponse> authenticateWithIShop(String email, String password, 
-    //                                            List<ServiceStatus> services, 
-    //                                            String ipayToken, String telephone, String userId) {
-    // IShopLoginRequest loginRequest = new IShopLoginRequest(email, password);
-    // return iShopService.login(loginRequest)
-    //     .flatMap(iShopResponse -> {
-    //         boolean iShopSuccess = iShopResponse != null && 
-    //         iShopResponse.getStatus() != null && 
-    //         iShopResponse.getStatus().equals("success");
-            
-    //         if (iShopSuccess) {
-    //             services.add(new ServiceStatus("i-shop", true, "Compte seller iShop validé"));
-                
-    //             // Vérifier si l'utilisateur est un vendeur
-    //             boolean isSeller = false;
-    //             if (iShopResponse.getUser_type() != null && 
-    //                 iShopResponse.getSeller_type() != null && 
-    //                 !iShopResponse.getSeller_type().isEmpty()) {
-    //                 isSeller = true;
-    //             }
-                
-    //             // Créer un IShopInfo à partir de la réponse
-    //             IShopInfo ishopInfo = null;
-    //             if (iShopSuccess) {
-    //                 ishopInfo = IShopInfo.fromLoginResponse(iShopResponse);
-    //             }
-                
-    //             // Générer le token JWT avec toutes les informations
-    //             String jwtToken = jwtUtil.generateTokenWithIShopInfo(email, ipayToken, telephone, userId, ishopInfo);
-                
-    //             // Construire la réponse complète
-    //             return Mono.just(new AuthResponse(
-    //                 "success", 
-    //                 "Authentification réussie", 
-    //                 jwtToken, 
-    //                 services, 
-    //                 ishopInfo, 
-    //                 isSeller
-    //             ));
-    //         } else {
-    //             // L'authentification iShop a échoué mais iPay est réussie
-    //             String errorMessage = iShopResponse != null ? 
-    //                                  iShopResponse.getMessage() : "Erreur d'authentification iShop";
-    //             services.add(new ServiceStatus("i-shop", false, errorMessage));
-                
-    //             // Générer le token JWT avec les informations iPay seulement
-    //             String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-                
-    //             return Mono.just(new AuthResponse(
-    //                 "success", 
-    //                 "Authentification iPay réussie", 
-    //                 jwtToken, 
-    //                 services,
-    //                 null,
-    //                 false
-    //             ));
-    //         }
-    //     })
-    //     .onErrorResume(e -> {
-    //         logger.error("Erreur lors de l'authentification iShop", e);
-    //         services.add(new ServiceStatus("i-shop", false, "Service iShop temporairement indisponible"));
-            
-    //         // Générer le token JWT avec les informations iPay seulement
-    //         String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-            
-    //         return Mono.just(new AuthResponse(
-    //             "success", 
-    //             "Authentification iPay réussie", 
-    //             jwtToken, 
-    //             services,
-    //             null,
-    //             false
-    //         ));
-    //     });
-    // }
-    // private Mono<AuthResponse> authenticateWithIShop(String email, String password, 
-    //                                            List<ServiceStatus> services, 
-    //                                            String ipayToken, String telephone, String userId) {
-    // IShopLoginRequest loginRequest = new IShopLoginRequest(email, password);
-    // return iShopService.login(loginRequest)
-    //     .flatMap(iShopResponse -> {
-    //         boolean iShopSuccess = iShopResponse != null && 
-    //                              iShopResponse.getStatus() != null && 
-    //                              iShopResponse.getStatus().equals("success");
-            
-    //         if (iShopSuccess) {
-    //             boolean isSeller = iShopResponse.getUser_type() != null && 
-    //                              "Seller".equalsIgnoreCase(iShopResponse.getUser_type());
-                
-    //             services.add(new ServiceStatus("i-shop", true, 
-    //                 isSeller ? "Compte seller iShop validé" : "Compte buyer iShop"));
-                
-    //             IShopInfo ishopInfo = null;
-    //             if (isSeller) {
-    //                 ishopInfo = IShopInfo.fromLoginResponse(iShopResponse);
-    //             }
-                
-    //             String jwtToken = jwtUtil.generateTokenWithIShopInfo(email, ipayToken, telephone, userId, ishopInfo);
-                
-    //             return Mono.just(new AuthResponse(
-    //                 "success", 
-    //                 "Authentification réussie", 
-    //                 jwtToken, 
-    //                 services, 
-    //                 ishopInfo,  // null si pas seller
-    //                 isSeller
-    //             ));
-    //         } else {
-    //             String errorMessage = iShopResponse.getMessage() != null ? 
-    //                                iShopResponse.getMessage() : "Erreur d'authentification iShop";
-    //             services.add(new ServiceStatus("i-shop", false, errorMessage));
-                
-    //             String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-                
-    //             return Mono.just(new AuthResponse(
-    //                 "success", 
-    //                 "Authentification iPay réussie", 
-    //                 jwtToken, 
-    //                 services,
-    //                 null,
-    //                 false
-    //             ));
-    //         }
-    //     })
-    //     .onErrorResume(e -> {
-    //         logger.error("Erreur lors de l'authentification iShop", e);
-    //         services.add(new ServiceStatus("i-shop", false, "Service iShop temporairement indisponible"));
-            
-    //         String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-            
-    //         return Mono.just(new AuthResponse(
-    //             "success", 
-    //             "Authentification iPay réussie", 
-    //             jwtToken, 
-    //             services,
-    //             null,
-    //             false
-    //         ));
-    //     });
-    // }
-
-    private Mono<AuthResponse> authenticateWithIShop(String email, String password, 
-                                               List<ServiceStatus> services, 
-                                               String ipayToken, String telephone, String userId) {
-    IShopLoginRequest loginRequest = new IShopLoginRequest(email, password);
-    
-    // Supprimer tout statut i-shop existant
-    services.removeIf(service -> "i-shop".equals(service.getServiceName()));
-    
-    return iShopService.login(loginRequest)
-        .flatMap(iShopResponse -> {
-            boolean iShopSuccess = iShopResponse != null && 
-                                 "success".equals(iShopResponse.getStatus());
-            
-            if (iShopSuccess) {
-                boolean isSeller = "Seller".equalsIgnoreCase(iShopResponse.getUser_type());
-                String shopMessage = isSeller ? "Compte seller iShop validé" : "Compte buyer iShop";
-                services.add(new ServiceStatus("i-shop", true, shopMessage));
-                
-                IShopInfo ishopInfo = isSeller ? IShopInfo.fromLoginResponse(iShopResponse) : null;
-                String jwtToken = jwtUtil.generateTokenWithIShopInfo(email, ipayToken, telephone, userId, ishopInfo);
-                
-                return Mono.just(new AuthResponse(
-                    "success", 
-                    "Authentification réussie", 
-                    jwtToken, 
-                    services, 
-                    ishopInfo,
-                    isSeller
-                ));
-            } else {
-                String errorMessage = iShopResponse != null ? 
-                                   iShopResponse.getMessage() : "Erreur d'authentification iShop";
-                services.add(new ServiceStatus("i-shop", false, errorMessage));
-                
-                String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-                return Mono.just(new AuthResponse(
-                    "success", 
-                    "Authentification iPay réussie", 
-                    jwtToken, 
-                    services,
-                    null,
-                    false
-                ));
-            }
-        });
-    }
-
-
-    
-    private Mono<AuthResponse> forceDisconnectAndReconnect(String existingToken, String email, String password) {
-        return ipayService.deconnexionUser(existingToken)
-            .flatMap(deconnectResponse -> {
-                logger.info("Déconnexion forcée effectuée pour: {}", email);
-                return Mono.delay(Duration.ofMillis(1500))
-                    .then(ipayService.authenticate(email, password));
-            })
-            .flatMap(newAuthResult -> {
-                if (newAuthResult.isSuccess()) {
-                    logger.info("Reconnexion réussie pour: {}", email);
-                    return processSuccessfulAuthentication(newAuthResult, email, password);
-                } else {
-                    logger.warn("Échec de la reconnexion pour: {}: {}", email, newAuthResult.getMessage());
-                    return Mono.just(buildErrorResponse(newAuthResult.getMessage()));
-                }
-            })
-            .onErrorResume(e -> {
-                logger.error("Erreur technique lors de la reconnexion pour: {}", email, e);
-                return Mono.just(buildErrorResponse("Erreur technique lors de la reconnexion: " + e.getMessage()));
-            });
+    private AuthResponse buildFinalAuthResponse(String email, String ipayToken, String telephone, String userId, boolean ishopSuccess, boolean isSeller, com.innov4africa.api_gateway.model.IShopLoginResponse ishopResponse, List<ServiceStatus> services) {
+        String globalMessage;
+        if (ishopSuccess && isSeller) {
+            globalMessage = "Authentification SSO réussie (iPay + iShop Seller)";
+            IShopInfo ishopInfo = IShopInfo.fromLoginResponse(ishopResponse);
+            String jwtToken = jwtUtil.generateTokenWithIShopInfo(email, ipayToken, telephone, userId, ishopInfo);
+            return new AuthResponse("success", globalMessage, jwtToken, services, ishopInfo, true);
+        } else if (ishopSuccess) {
+            globalMessage = "Authentification SSO réussie (iPay + iShop Buyer)";
+            String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
+            return new AuthResponse("success", globalMessage, jwtToken, services, null, false);
+        } else {
+            globalMessage = "Authentification iPay réussie, iShop indisponible";
+            String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
+            return new AuthResponse("success", globalMessage, jwtToken, services, null, false);
+        }
     }
 
     public Mono<LogoutResponse> logout(String jwt) {
