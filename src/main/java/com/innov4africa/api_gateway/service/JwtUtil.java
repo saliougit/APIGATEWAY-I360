@@ -3,6 +3,7 @@ package com.innov4africa.api_gateway.service;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -10,6 +11,9 @@ import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.innov4africa.api_gateway.model.DomaineResponse;
+import com.innov4africa.api_gateway.model.IShopInfo;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -78,6 +82,7 @@ public class JwtUtil {
         return createToken(new HashMap<>(), username);
     }
 
+    
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .claims(claims)
@@ -98,6 +103,45 @@ public class JwtUtil {
         } catch (Exception e) {
             return false;
         }
+    }
+
+
+    // Méthode pour générer un token JWT avec des informations iShop
+    public String generateTokenWithIShopInfo(String username, String ipayToken, String telephone, 
+                                        String userId, IShopInfo ishopInfo) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("ipayToken", ipayToken);
+        claims.put("telephone", telephone);
+        claims.put("userId", userId);
+        
+        // Ajout des infos iShop seulement si c'est un seller
+        if ("Seller".equals(ishopInfo.getUser_type())) {
+            claims.put("ishopUserId", ishopInfo.getUser_id());
+            claims.put("userType", ishopInfo.getUser_type());
+            claims.put("sellerCredit", ishopInfo.getCredit());
+            
+            if (ishopInfo.getDomaineList() != null && !ishopInfo.getDomaineList().isEmpty()) {
+                claims.put("primaryDomaine", ishopInfo.getDomaineList().get(0).getLibelle());
+            }
+        }
+        
+        return createToken(claims, username);
+    }
+
+    public IShopInfo extractIShopInfo(String token) {
+        Claims claims = extractAllClaims(token);
+        IShopInfo info = new IShopInfo();
+        info.setUser_id(claims.get("ishopUserId", Integer.class));
+        info.setUser_type(claims.get("userType", String.class));
+        info.setCredit(claims.get("sellerCredit", Integer.class));
+        
+        if (claims.containsKey("primaryDomaine")) {
+            DomaineResponse domaine = new DomaineResponse();
+            domaine.setLibelle(claims.get("primaryDomaine", String.class));
+            info.setDomaineList(List.of(domaine));
+        }
+        
+        return info;
     }
 
     // Méthodes d'extraction spécifiques à IPay
@@ -129,6 +173,23 @@ public class JwtUtil {
 
     public String extractEmail(String token) {
         return extractClaim(token, claims -> claims.get("email", String.class));
+    }
+
+    // Extract iShop information from token
+    public String extractIShopUserId(String token) {
+        return extractClaim(token, claims -> claims.get("ishopUserId", String.class));
+    }
+
+    public String extractUserType(String token) {
+        return extractClaim(token, claims -> claims.get("userType", String.class));
+    }
+
+    public String extractSellerType(String token) {
+        return extractClaim(token, claims -> claims.get("sellerType", String.class));
+    }
+
+    public String extractDomaines(String token) {
+        return extractClaim(token, claims -> claims.get("domaines", String.class));
     }
 
     // Méthodes existantes conservées

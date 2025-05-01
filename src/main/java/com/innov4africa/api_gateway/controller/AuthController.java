@@ -1,19 +1,30 @@
 package com.innov4africa.api_gateway.controller;
 
-import com.innov4africa.api_gateway.model.AuthRequest;
-import com.innov4africa.api_gateway.model.AuthResponse;
-import com.innov4africa.api_gateway.model.LogoutResponse;
-import com.innov4africa.api_gateway.model.ServiceStatus;
-import com.innov4africa.api_gateway.service.AuthService;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.innov4africa.api_gateway.model.AuthRequest;
+import com.innov4africa.api_gateway.model.AuthResponse;
+import com.innov4africa.api_gateway.model.IShopInfo;
+import com.innov4africa.api_gateway.model.JwtInfoResponse;
+import com.innov4africa.api_gateway.model.LogoutResponse;
+import com.innov4africa.api_gateway.model.ServiceStatus;
+import com.innov4africa.api_gateway.service.AuthService;
+import com.innov4africa.api_gateway.service.JwtUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/auth")
@@ -23,6 +34,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+     @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/login")
     public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest request) {
@@ -34,6 +48,42 @@ public class AuthController {
                     return ResponseEntity.status(401).body(response);
                 }
             });
+    }
+
+        @Operation(summary = "Extraire les infos du token JWT",
+            description = "Renvoie les informations contenues dans le token JWT")
+    @GetMapping("/extract-jwt-info")
+    public ResponseEntity<JwtInfoResponse> extractJwtInfo(
+        @RequestHeader("Authorization") String authHeader) {
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body(new JwtInfoResponse("error", "Token manquant ou invalide"));
+        }
+        
+        String token = authHeader.substring(7);
+        
+        if (!jwtUtil.validateToken(token)) {
+            return ResponseEntity.status(401).body(new JwtInfoResponse("error", "Token invalide ou expiré"));
+        }
+        
+        try {
+            JwtInfoResponse response = new JwtInfoResponse();
+            response.setStatus("success");
+            response.setEmail(jwtUtil.extractUsername(token));
+            response.setTelephone(jwtUtil.extractTelephone(token));
+            response.setUserId(jwtUtil.extractUserId(token));
+            response.setSeller(jwtUtil.extractUserType(token) != null && 
+                            jwtUtil.extractUserType(token).equalsIgnoreCase("Seller"));
+            
+            if (response.isSeller()) {
+                IShopInfo ishopInfo = jwtUtil.extractIShopInfo(token);
+                response.setIshopInfo(ishopInfo);
+            }
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new JwtInfoResponse("error", "Erreur lors de l'extraction du token"));
+        }
     }
     
     /**

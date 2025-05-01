@@ -8,6 +8,8 @@ public class AuthResponse{
     private String message;
     private String token;
     private List<ServiceStatus> serviceStatuses;
+    private IShopInfo ishopInfos;
+    private boolean isSeller; 
 
     // Constructeurs, getters, setters
     public AuthResponse() {}
@@ -19,6 +21,15 @@ public class AuthResponse{
         this.serviceStatuses = serviceStatuses;
     }
 
+    public AuthResponse(String status, String message, String token, List<ServiceStatus> serviceStatuses, IShopInfo ishopInfos, boolean isSeller) {
+        this.status = status;
+        this.message = message;
+        this.token = token;
+        this.serviceStatuses = serviceStatuses;
+        this.ishopInfos = ishopInfos;
+        this.isSeller = isSeller;
+    }
+
     // Getters et setters
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
@@ -28,4 +39,8 @@ public class AuthResponse{
     public void setToken(String token) { this.token = token; }
     public List<ServiceStatus> getServiceStatuses() { return serviceStatuses; }
     public void setServiceStatuses(List<ServiceStatus> serviceStatuses) { this.serviceStatuses = serviceStatuses; }
+    public IShopInfo getIshopInfos() { return ishopInfos; }
+    public void setIshopInfos(IShopInfo ishopInfos) { this.ishopInfos = ishopInfos; }
+    public boolean isSeller() { return isSeller; }
+    public void setSeller(boolean isSeller) { this.isSeller = isSeller; }
 }
