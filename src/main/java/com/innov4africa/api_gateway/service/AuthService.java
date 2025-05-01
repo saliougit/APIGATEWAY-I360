@@ -115,22 +115,88 @@ public class AuthService {
             });
     }
 
-    private AuthResponse buildFinalAuthResponse(String email, String ipayToken, String telephone, String userId, boolean ishopSuccess, boolean isSeller, com.innov4africa.api_gateway.model.IShopLoginResponse ishopResponse, List<ServiceStatus> services) {
-        String globalMessage;
-        if (ishopSuccess && isSeller) {
-            globalMessage = "Authentification SSO réussie (iPay + iShop Seller)";
-            IShopInfo ishopInfo = IShopInfo.fromLoginResponse(ishopResponse);
-            String jwtToken = jwtUtil.generateTokenWithIShopInfo(email, ipayToken, telephone, userId, ishopInfo);
-            return new AuthResponse("success", globalMessage, jwtToken, services, ishopInfo, true);
-        } else if (ishopSuccess) {
-            globalMessage = "Authentification SSO réussie (iPay + iShop Buyer)";
-            String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-            return new AuthResponse("success", globalMessage, jwtToken, services, null, false);
-        } else {
-            globalMessage = "Authentification iPay réussie, iShop indisponible";
-            String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-            return new AuthResponse("success", globalMessage, jwtToken, services, null, false);
-        }
+    // private AuthResponse buildFinalAuthResponse(String email, String ipayToken, String telephone, String userId, boolean ishopSuccess, boolean isSeller, com.innov4africa.api_gateway.model.IShopLoginResponse ishopResponse, List<ServiceStatus> services) {
+    //     String globalMessage;
+    //     if (ishopSuccess && isSeller) {
+    //         globalMessage = "Authentification SSO réussie (iPay + iShop Seller)";
+    //         IShopInfo ishopInfo = IShopInfo.fromLoginResponse(ishopResponse);
+    //         String jwtToken = jwtUtil.generateTokenWithIShopInfo(email, ipayToken, telephone, userId, ishopInfo);
+    //         return new AuthResponse("success", globalMessage, jwtToken, services, ishopInfo, true);
+    //     } else if (ishopSuccess) {
+    //         globalMessage = "Authentification SSO réussie (iPay + iShop Buyer)";
+    //         String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
+    //         return new AuthResponse("success", globalMessage, jwtToken, services, null, false);
+    //     } else {
+    //         globalMessage = "Authentification iPay réussie, iShop indisponible";
+    //         String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
+    //         return new AuthResponse("success", globalMessage, jwtToken, services, null, false);
+    //     }
+    // }
+
+    private AuthResponse buildFinalAuthResponse(String email, String ipayToken, String telephone, 
+                                         String userId, boolean ishopSuccess, boolean isSeller, 
+                                         com.innov4africa.api_gateway.model.IShopLoginResponse ishopResponse, 
+                                         List<ServiceStatus> services) {
+    
+    // Récupérer l'accountId depuis iPay (comme dans l'ancienne version)
+    return ipayService.getAllListAccount(ipayToken, telephone)
+        .flatMap(xmlResponse -> {
+            String accountIdIPay = ipayService.extractAccountIdFromResponse(xmlResponse);
+            
+            // Génération du token adapté
+            String jwtToken;
+            IShopInfo ishopInfo = null;
+            String globalMessage;
+            
+            if (isSeller && ishopSuccess) {
+                // Cas Seller - Token complet avec toutes les infos
+                ishopInfo = IShopInfo.fromLoginResponse(ishopResponse);
+                jwtToken = jwtUtil.generateCompleteSellerToken(
+                    email, 
+                    ipayToken, 
+                    telephone, 
+                    userId, 
+                    accountIdIPay,
+                    ishopInfo
+                );
+                globalMessage = "Authentification SSO réussie (Seller)";
+            } else {
+                // Cas Buyer - Token avec juste les infos iPay + accountId
+                jwtToken = jwtUtil.generateIpayTokenWithAccount(
+                    email, 
+                    ipayToken, 
+                    telephone, 
+                    userId, 
+                    accountIdIPay
+                );
+                globalMessage = "Authentification réussie";
+            }
+            
+            return Mono.just(new AuthResponse(
+                "success",
+                globalMessage,
+                jwtToken,
+                services,
+                ishopInfo,
+                isSeller
+            ));
+        })
+        .onErrorResume(e -> {
+            logger.error("Erreur récupération accountId", e);
+            // Fallback sans accountId
+            String jwtToken = isSeller ? 
+                jwtUtil.generateTokenWithIShopInfo(email, ipayToken, telephone, userId, IShopInfo.fromLoginResponse(ishopResponse)) :
+                jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
+            
+            return Mono.just(new AuthResponse(
+                "success",
+                "Authentification réussie (sans accountId)",
+                jwtToken,
+                services,
+                isSeller ? IShopInfo.fromLoginResponse(ishopResponse) : null,
+                isSeller
+            ));
+        });
     }
 
     public Mono<LogoutResponse> logout(String jwt) {

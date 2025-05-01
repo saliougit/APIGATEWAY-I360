@@ -42,16 +42,16 @@ public class JwtUtil {
         return createToken(claims, username);
     }
     
-    // Génère un token JWT avec toutes les informations IPay y compris l'ID du compte
-    public String generateIpayTokenWithAccount(String username, String ipayToken, String telephone, 
-                                          String userId, String accountIdIPay) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("ipayToken", ipayToken);
-        claims.put("telephone", telephone);
-        claims.put("userId", userId);
-        claims.put("accountIdIPay", accountIdIPay);
-        return createToken(claims, username);
-    }
+    // // Génère un token JWT avec toutes les informations IPay y compris l'ID du compte
+    // public String generateIpayTokenWithAccount(String username, String ipayToken, String telephone, 
+    //                                       String userId, String accountIdIPay) {
+    //     Map<String, Object> claims = new HashMap<>();
+    //     claims.put("ipayToken", ipayToken);
+    //     claims.put("telephone", telephone);
+    //     claims.put("userId", userId);
+    //     claims.put("accountIdIPay", accountIdIPay);
+    //     return createToken(claims, username);
+    // }
     
     // Version améliorée avec nom et prénom pour les besoins du SMS Pay
     public String generateIpayTokenWithUserInfo(String username, String ipayToken, String telephone, String userId, String nom, String prenom) {
@@ -104,6 +104,41 @@ public class JwtUtil {
             return false;
         }
     }
+
+    public String generateCompleteSellerToken(String username, String ipayToken, String telephone, 
+                                       String userId, String accountIdIPay, IShopInfo ishopInfo) {
+    Map<String, Object> claims = new HashMap<>();
+    
+    // Infos iPay obligatoires
+    claims.put("ipayToken", ipayToken);
+    claims.put("telephone", telephone);
+    claims.put("userId", userId);
+    claims.put("accountIdIPay", accountIdIPay);
+    
+    // Infos iShop (seller seulement)
+    if (ishopInfo != null) {
+        claims.put("ishopUserId", ishopInfo.getUser_id());
+        claims.put("userType", ishopInfo.getUser_type());
+        claims.put("sellerCredit", ishopInfo.getCredit());
+        
+        if (ishopInfo.getDomaineList() != null && !ishopInfo.getDomaineList().isEmpty()) {
+            claims.put("primaryDomaine", ishopInfo.getDomaineList().get(0).getLibelle());
+        }
+    }
+    
+    return createToken(claims, username);
+}
+
+public String generateIpayTokenWithAccount(String username, String ipayToken, String telephone, 
+                                        String userId, String accountIdIPay) {
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("ipayToken", ipayToken);
+    claims.put("telephone", telephone);
+    claims.put("userId", userId);
+    claims.put("accountIdIPay", accountIdIPay); // Maintenant toujours présent
+    
+    return createToken(claims, username);
+}
 
 
     // Méthode pour générer un token JWT avec des informations iShop
