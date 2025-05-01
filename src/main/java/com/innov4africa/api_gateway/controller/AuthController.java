@@ -1,6 +1,8 @@
 package com.innov4africa.api_gateway.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,39 +52,110 @@ public class AuthController {
             });
     }
 
-        @Operation(summary = "Extraire les infos du token JWT",
-            description = "Renvoie les informations contenues dans le token JWT")
+    //     @Operation(summary = "Extraire les infos du token JWT",
+    //         description = "Renvoie les informations contenues dans le token JWT")
+    // @GetMapping("/extract-jwt-info")
+    // public ResponseEntity<JwtInfoResponse> extractJwtInfo(
+    //     @RequestHeader("Authorization") String authHeader) {
+        
+    //     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+    //         return ResponseEntity.badRequest().body(new JwtInfoResponse("error", "Token manquant ou invalide"));
+    //     }
+        
+    //     String token = authHeader.substring(7);
+        
+    //     if (!jwtUtil.validateToken(token)) {
+    //         return ResponseEntity.status(401).body(new JwtInfoResponse("error", "Token invalide ou expiré"));
+    //     }
+        
+    //     try {
+    //         JwtInfoResponse response = new JwtInfoResponse();
+    //         response.setStatus("success");
+    //         response.setEmail(jwtUtil.extractUsername(token));
+    //         response.setTelephone(jwtUtil.extractTelephone(token));
+    //         response.setUserId(jwtUtil.extractUserId(token));
+    //         response.setSeller(jwtUtil.extractUserType(token) != null && 
+    //                         jwtUtil.extractUserType(token).equalsIgnoreCase("Seller"));
+            
+    //         if (response.isSeller()) {
+    //             IShopInfo ishopInfo = jwtUtil.extractIShopInfo(token);
+    //             response.setIshopInfo(ishopInfo);
+    //         }
+            
+    //         return ResponseEntity.ok(response);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(500).body(new JwtInfoResponse("error", "Erreur lors de l'extraction du token"));
+    //     }
+    // }
+        @Operation(summary = "Extraire toutes les infos du token JWT",
+        description = "Renvoie toutes les informations contenues dans le token JWT")
     @GetMapping("/extract-jwt-info")
-    public ResponseEntity<JwtInfoResponse> extractJwtInfo(
+    public ResponseEntity<Map<String, Object>> extractAllJwtInfo(
         @RequestHeader("Authorization") String authHeader) {
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body(new JwtInfoResponse("error", "Token manquant ou invalide"));
+            return ResponseEntity.badRequest().body(Map.of(
+                "status", "error",
+                "message", "Token manquant ou invalide"
+            ));
         }
         
         String token = authHeader.substring(7);
         
         if (!jwtUtil.validateToken(token)) {
-            return ResponseEntity.status(401).body(new JwtInfoResponse("error", "Token invalide ou expiré"));
+            return ResponseEntity.status(401).body(Map.of(
+                "status", "error",
+                "message", "Token invalide ou expiré"
+            ));
         }
         
         try {
-            JwtInfoResponse response = new JwtInfoResponse();
-            response.setStatus("success");
-            response.setEmail(jwtUtil.extractUsername(token));
-            response.setTelephone(jwtUtil.extractTelephone(token));
-            response.setUserId(jwtUtil.extractUserId(token));
-            response.setSeller(jwtUtil.extractUserType(token) != null && 
-                            jwtUtil.extractUserType(token).equalsIgnoreCase("Seller"));
+            Map<String, Object> response = new HashMap<>();
             
-            if (response.isSeller()) {
+            // Ajout du statut
+            response.put("status", "success");
+            
+            // Extraction des informations de base
+            response.put("email", jwtUtil.extractUsername(token));
+            response.put("telephone", jwtUtil.extractTelephone(token));
+            response.put("ipayUserId", jwtUtil.extractUserId(token));
+            response.put("accountIdIPay", jwtUtil.extractAccountIdIPay(token));
+            response.put("ipayToken", jwtUtil.extractIpayToken(token));
+            
+            // Informations optionnelles
+            String userType = jwtUtil.extractUserType(token);
+            if (userType != null) {
+                response.put("userType", userType);
+            }
+            
+            String nom = jwtUtil.extractNom(token);
+            if (nom != null) {
+                response.put("nom", nom);
+            }
+            
+            String prenom = jwtUtil.extractPrenom(token);
+            if (prenom != null) {
+                response.put("prenom", prenom);
+            }
+            
+            // Si c'est un seller, ajouter les infos iShop
+            if ("Seller".equalsIgnoreCase(userType)) {
                 IShopInfo ishopInfo = jwtUtil.extractIShopInfo(token);
-                response.setIshopInfo(ishopInfo);
+                if (ishopInfo != null) {
+                    response.put("ishopUserId", ishopInfo.getUser_id());
+                    response.put("sellerCredit", ishopInfo.getCredit());
+                    if (ishopInfo.getDomaineList() != null && !ishopInfo.getDomaineList().isEmpty()) {
+                        response.put("primaryDomaine", ishopInfo.getDomaineList().get(0).getLibelle());
+                    }
+                }
             }
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(new JwtInfoResponse("error", "Erreur lors de l'extraction du token"));
+            return ResponseEntity.status(500).body(Map.of(
+                "status", "error",
+                "message", "Erreur lors de l'extraction du token: " + e.getMessage()
+            ));
         }
     }
     

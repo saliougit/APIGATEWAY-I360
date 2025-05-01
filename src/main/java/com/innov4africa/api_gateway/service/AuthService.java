@@ -94,19 +94,19 @@ public class AuthService {
                                 authResult.getPrenom(),
                                 authResult.getNom(),
                                 password
-                            ).map(created -> {
+                            ).flatMap(created -> {
                                 services.add(new ServiceStatus("i-banking", created, created ? "Compte iBanking créé avec succès" : "Échec de la création du compte iBanking"));
                                 return buildFinalAuthResponse(email, ipayToken, telephone, userId, ishopSuccess, isSeller, ishopResponse, services);
                             });
                         } else {
                             services.add(new ServiceStatus("i-banking", true, "Compte iBanking disponible"));
-                            return Mono.just(buildFinalAuthResponse(email, ipayToken, telephone, userId, ishopSuccess, isSeller, ishopResponse, services));
+                            return buildFinalAuthResponse(email, ipayToken, telephone, userId, ishopSuccess, isSeller, ishopResponse, services);
                         }
                     })
                     .onErrorResume(e -> {
                         logger.error("Erreur lors de la vérification/création iBanking", e);
                         services.add(new ServiceStatus("i-banking", false, "Service iBanking temporairement indisponible"));
-                        return Mono.just(buildFinalAuthResponse(email, ipayToken, telephone, userId, ishopSuccess, isSeller, ishopResponse, services));
+                        return buildFinalAuthResponse(email, ipayToken, telephone, userId, ishopSuccess, isSeller, ishopResponse, services);
                     });
             })
             .onErrorResume(e -> {
@@ -115,25 +115,7 @@ public class AuthService {
             });
     }
 
-    // private AuthResponse buildFinalAuthResponse(String email, String ipayToken, String telephone, String userId, boolean ishopSuccess, boolean isSeller, com.innov4africa.api_gateway.model.IShopLoginResponse ishopResponse, List<ServiceStatus> services) {
-    //     String globalMessage;
-    //     if (ishopSuccess && isSeller) {
-    //         globalMessage = "Authentification SSO réussie (iPay + iShop Seller)";
-    //         IShopInfo ishopInfo = IShopInfo.fromLoginResponse(ishopResponse);
-    //         String jwtToken = jwtUtil.generateTokenWithIShopInfo(email, ipayToken, telephone, userId, ishopInfo);
-    //         return new AuthResponse("success", globalMessage, jwtToken, services, ishopInfo, true);
-    //     } else if (ishopSuccess) {
-    //         globalMessage = "Authentification SSO réussie (iPay + iShop Buyer)";
-    //         String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-    //         return new AuthResponse("success", globalMessage, jwtToken, services, null, false);
-    //     } else {
-    //         globalMessage = "Authentification iPay réussie, iShop indisponible";
-    //         String jwtToken = jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-    //         return new AuthResponse("success", globalMessage, jwtToken, services, null, false);
-    //     }
-    // }
-
-    private AuthResponse buildFinalAuthResponse(String email, String ipayToken, String telephone, 
+    private Mono<AuthResponse> buildFinalAuthResponse(String email, String ipayToken, String telephone, 
                                          String userId, boolean ishopSuccess, boolean isSeller, 
                                          com.innov4africa.api_gateway.model.IShopLoginResponse ishopResponse, 
                                          List<ServiceStatus> services) {
