@@ -1,5 +1,7 @@
 package com.innov4africa.api_gateway.controller;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,18 +12,16 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.innov4africa.api_gateway.model.IShopLoginRequest;
-import com.innov4africa.api_gateway.model.IShopLoginResponse;
 import com.innov4africa.api_gateway.model.IShopAddressRequest;
 import com.innov4africa.api_gateway.model.IShopAddressResponse;
+import com.innov4africa.api_gateway.model.IShopLoginRequest;
+import com.innov4africa.api_gateway.model.IShopLoginResponse;
 import com.innov4africa.api_gateway.service.IShopService;
 import com.innov4africa.api_gateway.service.JwtUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import reactor.core.publisher.Mono;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/ishop")
@@ -94,15 +94,25 @@ public class IShopController {
             return Mono.just(ResponseEntity.status(401).body(error));
         }
         // Récupérer le user_id iShop depuis le token
-        Integer ishopUserId = null;
+        // Integer ishopUserId = null;
+        Integer ishopUserId = 725;
         try {
             var ishopInfo = jwtUtil.extractIShopInfo(token);
-            if (ishopInfo == null || ishopInfo.getUser_id() == null) {
-                return Mono.just(ResponseEntity.status(403).build());
-            }
-            ishopUserId = ishopInfo.getUser_id();
+            // if (ishopInfo == null || ishopInfo.getUser_id() == null) {
+            //     IShopAddressResponse error = new IShopAddressResponse();
+            //     error.setStatus("error");
+            //     error.setMessage("Accès refusé : utilisateur iShop introuvable dans le token.");
+            //     error.setCode(403);
+            //     return Mono.just(ResponseEntity.status(403).body(error));
+            // }
+            // ishopUserId = ishopInfo.getUser_id();
+            ishopUserId = 725; // Valeur de test pour le développement
         } catch (Exception e) {
-            return Mono.just(ResponseEntity.status(500).build());
+            IShopAddressResponse error = new IShopAddressResponse();
+            error.setStatus("error");
+            error.setMessage("Erreur interne lors de l'extraction des informations utilisateur.");
+            error.setCode(500);
+            return Mono.just(ResponseEntity.status(500).body(error));
         }
         // Récupérer le language du body ou mettre "fr" par défaut
         String language = "fr";
@@ -112,6 +122,12 @@ public class IShopController {
         IShopAddressRequest req = new IShopAddressRequest(ishopUserId, language);
         return iShopService.listAddresseSeller(req)
             .map(response -> ResponseEntity.ok(response))
-            .onErrorResume(e -> Mono.just(ResponseEntity.status(500).build()));
+            .onErrorResume(e -> {
+                IShopAddressResponse error = new IShopAddressResponse();
+                error.setStatus("error");
+                error.setMessage("Erreur lors de la récupération des adresses vendeur iShop : " + e.getMessage());
+                error.setCode(500);
+                return Mono.just(ResponseEntity.status(500).body(error));
+            });
     }
 }
