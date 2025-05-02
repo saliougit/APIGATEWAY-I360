@@ -10,6 +10,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import com.innov4africa.api_gateway.model.IShopLoginRequest;
 import com.innov4africa.api_gateway.model.IShopLoginResponse;
+import com.innov4africa.api_gateway.model.IShopAddressRequest;
+import com.innov4africa.api_gateway.model.IShopAddressResponse;
 
 import io.netty.handler.timeout.TimeoutException;
 import reactor.core.publisher.Mono;
@@ -58,6 +60,21 @@ public class IShopService {
                 errorResponse.setMessage("Service i-shop temporairement indisponible");
                 errorResponse.setCode("500");
                 return Mono.just(errorResponse);
+            });
+    }
+
+    public Mono<IShopAddressResponse> listAddresseSeller(IShopAddressRequest request) {
+        String url = baseUrl + "/mobile-ws/product/list_addresse_seller";
+        logger.info("Appel distant iShop pour la liste des adresses vendeur: {}", request.getUser_id());
+        return webClient.post()
+            .uri(url)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(IShopAddressResponse.class)
+            .doOnNext(response -> logger.debug("Réponse iShop adresses: {}", response))
+            .onErrorResume(e -> {
+                logger.error("Erreur lors de la récupération des adresses vendeur iShop", e);
+                return Mono.error(new RuntimeException("Erreur lors de la récupération des adresses vendeur iShop"));
             });
     }
 
