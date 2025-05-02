@@ -12,6 +12,8 @@ import com.innov4africa.api_gateway.model.IShopLoginRequest;
 import com.innov4africa.api_gateway.model.IShopLoginResponse;
 import com.innov4africa.api_gateway.model.IShopAddressRequest;
 import com.innov4africa.api_gateway.model.IShopAddressResponse;
+import com.innov4africa.api_gateway.model.IShopNotificationResponse;
+import com.innov4africa.api_gateway.model.IShopNotificationRequest;
 
 import io.netty.handler.timeout.TimeoutException;
 import reactor.core.publisher.Mono;
@@ -78,12 +80,54 @@ public class IShopService {
             });
     }
 
-    private IShopLoginResponse createErrorResponse(String message) {
-        IShopLoginResponse response = new IShopLoginResponse();
-        response.setStatus("error");
-        response.setMessage(message);
-        response.setCode("500");
-        return response;
+    // public Mono<IShopNotificationResponse> listNotifications(IShopNotificationRequest request) {
+    //     String url = baseUrl + "/mobile-ws/product/notification_list";
+    //     logger.info("Appel distant iShop pour la liste des notifications: {}", request.getUser_id());
+    //     return webClient.post()
+    //         .uri(url)
+    //         .bodyValue(request)
+    //         .retrieve()
+    //         .bodyToMono(IShopNotificationResponse.class)
+    //         .doOnNext(response -> logger.debug("Réponse iShop notifications: {}", response))
+    //         .onErrorResume(e -> {
+    //             logger.error("Erreur lors de la récupération des notifications iShop", e);
+    //             return Mono.error(new RuntimeException("Erreur lors de la récupération des notifications iShop"));
+    //         });
+    // }
+
+    // private IShopLoginResponse createErrorResponse(String message) {
+    //     IShopLoginResponse response = new IShopLoginResponse();
+    //     response.setStatus("error");
+    //     response.setMessage(message);
+    //     response.setCode("500");
+    //     return response;
+    // }
+    public Mono<IShopNotificationResponse> listNotifications(IShopNotificationRequest request) {
+        String url = baseUrl + "/mobile-ws/product/notification_list";
+        logger.info("Appel distant iShop pour la liste des notifications: {}", request.getUser_id());
+        
+        return webClient.post()
+            .uri(url)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(IShopNotificationResponse.class)
+            .doOnNext(response -> {
+                logger.debug("Réponse iShop notifications reçue");
+                if ("error".equals(response.getStatus())) {
+                    logger.error("Erreur dans la réponse iShop: {}", response.getMessage());
+                }
+            })
+            .onErrorMap(WebClientResponseException.class, e -> {
+                logger.error("Erreur HTTP {} - Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
+                return new RuntimeException("Erreur lors de l'appel au service iShop: " + e.getMessage());
+            })
+            .onErrorResume(e -> {
+                logger.error("Erreur lors de la récupération des notifications", e);
+                IShopNotificationResponse errorResponse = new IShopNotificationResponse();
+                errorResponse.setStatus("error");
+                errorResponse.setMessage("Erreur technique: " + e.getMessage());
+                return Mono.just(errorResponse);
+            });
     }
 }
 

@@ -11,11 +11,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import com.innov4africa.api_gateway.model.IShopAddressRequest;
 import com.innov4africa.api_gateway.model.IShopAddressResponse;
 import com.innov4africa.api_gateway.model.IShopLoginRequest;
 import com.innov4africa.api_gateway.model.IShopLoginResponse;
+import com.innov4africa.api_gateway.model.IShopNotificationResponse;
+import com.innov4africa.api_gateway.model.IShopNotificationRequest;
 import com.innov4africa.api_gateway.service.IShopService;
 import com.innov4africa.api_gateway.service.JwtUtil;
 
@@ -94,8 +98,7 @@ public class IShopController {
             return Mono.just(ResponseEntity.status(401).body(error));
         }
         // Récupérer le user_id iShop depuis le token
-        // Integer ishopUserId = null;
-        Integer ishopUserId = 725;
+        Integer ishopUserId = null;
         try {
             var ishopInfo = jwtUtil.extractIShopInfo(token);
             // if (ishopInfo == null || ishopInfo.getUser_id() == null) {
@@ -129,5 +132,115 @@ public class IShopController {
                 error.setCode(500);
                 return Mono.just(ResponseEntity.status(500).body(error));
             });
+    }
+
+    // @Operation(summary = "Liste des notifications i-shop", description = "Récupère la liste des notifications d'un utilisateur i-shop à partir du token JWT")
+    // @PostMapping("/notifications")
+    // public Mono<ResponseEntity<IShopNotificationResponse>> listNotifications(
+    //         @RequestHeader(value = "Authorization", required = false) String authHeader,
+    //         @RequestBody(required = false) Map<String, Object> body) {
+    //     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+    //         IShopNotificationResponse error = new IShopNotificationResponse();
+    //         error.setStatus("error");
+    //         return Mono.just(ResponseEntity.status(401).body(error));
+    //     }
+    //     String token = authHeader.substring(7);
+    //     if (!jwtUtil.validateToken(token)) {
+    //         IShopNotificationResponse error = new IShopNotificationResponse();
+    //         error.setStatus("error");
+    //         return Mono.just(ResponseEntity.status(401).body(error));
+    //     }
+    //     Integer ishopUserId = null;
+    //     try {
+    //         var ishopInfo = jwtUtil.extractIShopInfo(token);
+    //         // if (ishopInfo == null || ishopInfo.getUser_id() == null) {
+    //         //     IShopNotificationResponse error = new IShopNotificationResponse();
+    //         //     error.setStatus("error");
+    //         //     error.setMessage("Accès refusé : utilisateur iShop introuvable dans le token.");
+    //         //     return Mono.just(ResponseEntity.status(403).body(error));
+    //         // }
+    //         // ishopUserId = ishopInfo.getUser_id();
+    //         ishopUserId = 725; // Valeur de test pour le développement
+    //     } catch (Exception e) {
+    //         IShopNotificationResponse error = new IShopNotificationResponse();
+    //         error.setStatus("error");
+    //         error.setMessage("Erreur interne lors de l'extraction des informations utilisateur.");
+    //         return Mono.just(ResponseEntity.status(500).body(error));
+    //     }
+    //     String language = "fr";
+    //     if (body != null && body.get("language") != null) {
+    //         language = String.valueOf(body.get("language"));
+    //     }
+    //     IShopNotificationRequest req = new IShopNotificationRequest(ishopUserId, language);
+    //     return iShopService.listNotifications(req)
+    //         .map(response -> ResponseEntity.ok(response))
+    //         .onErrorResume(e -> {
+    //             IShopNotificationResponse error = new IShopNotificationResponse();
+    //             error.setStatus("error");
+    //             return Mono.just(ResponseEntity.status(500).body(error));
+    //         });
+    // }
+
+     @Operation(summary = "Liste des notifications i-shop", 
+              description = "Récupère la liste des notifications d'un utilisateur i-shop à partir du token JWT")
+    @PostMapping("/notifications")
+    public Mono<ResponseEntity<IShopNotificationResponse>> listNotifications(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody(required = false) Map<String, Object> body) {
+        
+        // Vérification du token
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return Mono.just(buildErrorResponse(401, "Token d'authentification manquant ou invalide"));
+        }
+        
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            return Mono.just(buildErrorResponse(401, "Token invalide ou expiré"));
+        }
+
+        // Extraction des infos utilisateur
+        Integer ishopUserId;
+        try {
+            var ishopInfo = jwtUtil.extractIShopInfo(token);
+           // if (ishopInfo == null || ishopInfo.getUser_id() == null) {
+            //     IShopAddressResponse error = new IShopAddressResponse();
+            //     error.setStatus("error");
+            //     error.setMessage("Accès refusé : utilisateur iShop introuvable dans le token.");
+            //     error.setCode(403);
+            //     return Mono.just(ResponseEntity.status(403).body(error));
+            // }
+            // ishopUserId = ishopInfo.getUser_id();
+            ishopUserId = 725; // Valeur de test pour le développement
+        } catch (Exception e) {
+            return Mono.just(buildErrorResponse(500, "Erreur lors de l'extraction des informations utilisateur"));
+        }
+
+        // Gestion de la langue
+        String language = "fr";
+        if (body != null && body.get("language") != null) {
+            language = String.valueOf(body.get("language"));
+        }
+
+        // Appel du service
+        IShopNotificationRequest req = new IShopNotificationRequest(ishopUserId, language);
+        return iShopService.listNotifications(req)
+            .map(ResponseEntity::ok)
+            .onErrorResume(e -> {
+                logger.error("Erreur lors de la récupération des notifications", e);
+                if (e instanceof WebClientResponseException) {
+                    WebClientResponseException wcre = (WebClientResponseException) e;
+                    return Mono.just(buildErrorResponse(wcre.getStatusCode().value(), 
+                        "Erreur du serveur distant: " + wcre.getResponseBodyAsString()));
+                }
+                return Mono.just(buildErrorResponse(500, 
+                    "Erreur interne du serveur: " + e.getMessage()));
+            });
+    }
+
+    private ResponseEntity<IShopNotificationResponse> buildErrorResponse(int status, String message) {
+        IShopNotificationResponse error = new IShopNotificationResponse();
+        error.setStatus("error");
+        error.setMessage(message);
+        return ResponseEntity.status(status).body(error);
     }
 }
