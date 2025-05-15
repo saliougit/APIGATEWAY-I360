@@ -1,6 +1,7 @@
 package com.innov4africa.api_gateway.controller;
 
 import java.util.Map;
+import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,16 +11,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import com.innov4africa.api_gateway.model.IShopAddressRequest;
-import com.innov4africa.api_gateway.model.IShopAddressResponse;
-import com.innov4africa.api_gateway.model.IShopLoginRequest;
-import com.innov4africa.api_gateway.model.IShopLoginResponse;
-import com.innov4africa.api_gateway.model.IShopNotificationResponse;
-import com.innov4africa.api_gateway.model.IShopNotificationRequest;
+import com.innov4africa.api_gateway.model.*;
+import com.innov4africa.api_gateway.model.OrderType;
 import com.innov4africa.api_gateway.service.IShopService;
 import com.innov4africa.api_gateway.service.JwtUtil;
 
@@ -134,53 +132,6 @@ public class IShopController {
             });
     }
 
-    // @Operation(summary = "Liste des notifications i-shop", description = "Récupère la liste des notifications d'un utilisateur i-shop à partir du token JWT")
-    // @PostMapping("/notifications")
-    // public Mono<ResponseEntity<IShopNotificationResponse>> listNotifications(
-    //         @RequestHeader(value = "Authorization", required = false) String authHeader,
-    //         @RequestBody(required = false) Map<String, Object> body) {
-    //     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-    //         IShopNotificationResponse error = new IShopNotificationResponse();
-    //         error.setStatus("error");
-    //         return Mono.just(ResponseEntity.status(401).body(error));
-    //     }
-    //     String token = authHeader.substring(7);
-    //     if (!jwtUtil.validateToken(token)) {
-    //         IShopNotificationResponse error = new IShopNotificationResponse();
-    //         error.setStatus("error");
-    //         return Mono.just(ResponseEntity.status(401).body(error));
-    //     }
-    //     Integer ishopUserId = null;
-    //     try {
-    //         var ishopInfo = jwtUtil.extractIShopInfo(token);
-    //         // if (ishopInfo == null || ishopInfo.getUser_id() == null) {
-    //         //     IShopNotificationResponse error = new IShopNotificationResponse();
-    //         //     error.setStatus("error");
-    //         //     error.setMessage("Accès refusé : utilisateur iShop introuvable dans le token.");
-    //         //     return Mono.just(ResponseEntity.status(403).body(error));
-    //         // }
-    //         // ishopUserId = ishopInfo.getUser_id();
-    //         ishopUserId = 725; // Valeur de test pour le développement
-    //     } catch (Exception e) {
-    //         IShopNotificationResponse error = new IShopNotificationResponse();
-    //         error.setStatus("error");
-    //         error.setMessage("Erreur interne lors de l'extraction des informations utilisateur.");
-    //         return Mono.just(ResponseEntity.status(500).body(error));
-    //     }
-    //     String language = "fr";
-    //     if (body != null && body.get("language") != null) {
-    //         language = String.valueOf(body.get("language"));
-    //     }
-    //     IShopNotificationRequest req = new IShopNotificationRequest(ishopUserId, language);
-    //     return iShopService.listNotifications(req)
-    //         .map(response -> ResponseEntity.ok(response))
-    //         .onErrorResume(e -> {
-    //             IShopNotificationResponse error = new IShopNotificationResponse();
-    //             error.setStatus("error");
-    //             return Mono.just(ResponseEntity.status(500).body(error));
-    //         });
-    // }
-
      @Operation(summary = "Liste des notifications i-shop", 
               description = "Récupère la liste des notifications d'un utilisateur i-shop à partir du token JWT")
     @PostMapping("/notifications")
@@ -241,6 +192,60 @@ public class IShopController {
         IShopNotificationResponse error = new IShopNotificationResponse();
         error.setStatus("error");
         error.setMessage(message);
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @Operation(summary = "Liste des commandes vendeur i-shop", 
+              description = "Récupère la liste des commandes d'un vendeur selon leur statut (NEW, PENDING, PAST)")
+    @GetMapping("/seller/orders")
+    public Mono<ResponseEntity<IShopOrderResponse>> listSellerOrders(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam(required = false, defaultValue = "NEW") String type) {
+        
+        // Vérification du token
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return Mono.just(buildErrorResponseOrder(401, "Token d'authentification manquant ou invalide"));
+        }
+        
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            return Mono.just(buildErrorResponseOrder(401, "Token invalide ou expiré"));
+        }
+
+        // Extraction des infos utilisateur
+        Integer ishopUserId;
+        try {
+            var ishopInfo = jwtUtil.extractIShopInfo(token);
+            ishopUserId = 725; // Valeur de test pour le développement
+        } catch (Exception e) {
+            return Mono.just(buildErrorResponseOrder(500, "Erreur lors de l'extraction des informations utilisateur"));
+        }        // Validation du type
+        try {
+            OrderType orderType = OrderType.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return Mono.just(buildErrorResponseOrder(400, "Type invalide. Valeurs acceptées : NEW, PENDING, PAST"));
+        }
+
+        // Appel au service
+        return iShopService.listSellerOrders(ishopUserId, type.toUpperCase())
+            .map(ResponseEntity::ok)
+            .onErrorResume(e -> {
+                logger.error("Erreur lors de la récupération des commandes", e);
+                if (e instanceof WebClientResponseException) {
+                    WebClientResponseException wcre = (WebClientResponseException) e;
+                    return Mono.just(buildErrorResponseOrder(wcre.getStatusCode().value(), 
+                        "Erreur du serveur distant: " + wcre.getResponseBodyAsString()));
+                }
+                return Mono.just(buildErrorResponseOrder(500, 
+                    "Erreur interne du serveur: " + e.getMessage()));
+            });
+    }
+
+    private ResponseEntity<IShopOrderResponse> buildErrorResponseOrder(int status, String message) {
+        IShopOrderResponse error = new IShopOrderResponse();
+        error.setStatus("error");
+        error.setMessage(message);
+        error.setCode(status);
         return ResponseEntity.status(status).body(error);
     }
 }
