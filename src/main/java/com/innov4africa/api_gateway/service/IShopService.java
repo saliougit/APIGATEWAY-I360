@@ -3,6 +3,7 @@ package com.innov4africa.api_gateway.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -15,8 +16,12 @@ import com.innov4africa.api_gateway.model.IShopNotificationRequest;
 import com.innov4africa.api_gateway.model.IShopNotificationResponse;
 import com.innov4africa.api_gateway.model.IShopOrderResponse;
 import com.innov4africa.api_gateway.model.IShopOrder;
+import com.innov4africa.api_gateway.model.IShopProductRequest;
+import com.innov4africa.api_gateway.model.IShopProductResponse;
+import com.innov4africa.api_gateway.model.IShopProduct;
+import com.innov4africa.api_gateway.model.PaginationMetadata;
 import java.util.List;
-import reactor.core.publisher.Mono;
+import java.util.stream.Collectors;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -24,8 +29,19 @@ public class IShopService {
     private static final Logger logger = LoggerFactory.getLogger(IShopService.class);
     private final WebClient webClient;
 
+    // Constantes pour la standardisation des valeurs
+    private static final String DEFAULT_CURRENCY = "XOF";
+    private static final double MIN_RATING = 0.0;
+    private static final double MAX_RATING = 5.0;    private static final double DEFAULT_RATING = 0.0;
+    private static final int DEFAULT_LIMIT = 20;
+    private static final String DEFAULT_LANGUAGE = "fr";
+
     @Value("${ishop.base-url}")
-    private String baseUrl;    public IShopService(WebClient.Builder webClientBuilder) {
+    private String baseUrl;    
+
+    @Autowired
+    private IShopProductCacheService productCache;
+    public IShopService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
             .baseUrl("https://ibusinesscompanies.com:8443")
             .build();
@@ -107,7 +123,8 @@ public class IShopService {
                 errorResponse.setMessage("Erreur technique: " + e.getMessage());
                 return Mono.just(errorResponse);
             });
-    }    public Mono<IShopOrderResponse> listSellerOrders(Integer userId, String type) {
+    }    
+    public Mono<IShopOrderResponse> listSellerOrders(Integer userId, String type) {
         logger.info("Appel distant iShop pour la liste des commandes vendeur: user_id={}, type={}", 
             userId, type);
         return webClient.get()
@@ -132,6 +149,109 @@ public class IShopService {
                 errorResponse.setCode(500);
                 return Mono.just(errorResponse);
             });
+    }    public Mono<IShopProductResponse> listProducts(IShopProductRequest request) {
+        logger.info("Récupération des produits pour user_id={}, next_offset={}", 
+            request.getUser_id(), request.getNext_offset());
+          // Vérifier le cache d'abord
+        List<IShopProduct> cachedProducts = productCache.getCachedProducts(
+            request.getUser_id(), request.getLanguage());
+        
+        if (cachedProducts != null) {
+            logger.debug("Produits trouvés dans le cache, total items: {}", cachedProducts.size());
+            IShopProductResponse response = new IShopProductResponse();
+            response.setStatus("success");
+            response.setCode(200);
+            
+            // Calculer la sous-liste pour la page demandée
+            int start = request.getNext_offset();
+            int end = Math.min(start + DEFAULT_LIMIT, cachedProducts.size());
+            response.setResult(cachedProducts.subList(start, end));
+            
+            // Configurer la pagination avec le total exact du cache
+            Integer nextPage = end < cachedProducts.size() ? end : null;
+            response.setPagination(new PaginationMetadata(
+                request.getNext_offset(),
+                DEFAULT_LIMIT,
+                cachedProducts.size(),
+                nextPage
+            ));
+            return Mono.just(response);
+        }
+
+        // Si pas dans le cache, appeler le serveur
+        logger.info("Cache miss - Appel distant iShop");
+        return webClient.post()
+            .uri(baseUrl + "/mobile-ws/product/list")
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(IShopProductResponse.class)
+            .map(response -> {
+                // Normaliser les données
+                if (response.getResult() != null) {
+                    List<IShopProduct> normalizedProducts = response.getResult().stream()
+                        .map(this::normalizeProduct)
+                        .collect(Collectors.toList());
+                    
+                    // Mettre en cache
+                    productCache.cacheProducts(request.getUser_id(), request.getLanguage(), normalizedProducts);
+                    
+                    // Créer la réponse paginée
+                    return createPaginatedResponse(normalizedProducts, request.getNext_offset());
+                }
+                return response;
+            })
+            .doOnNext(response -> logger.debug("Réponse iShop produits: total={}", 
+                response.getPagination().getTotalItems()))
+            .onErrorResume(e -> {
+                logger.error("Erreur lors de la récupération des produits", e);
+                IShopProductResponse errorResponse = new IShopProductResponse();
+                errorResponse.setStatus("error");
+                errorResponse.setMessage("Erreur lors de la récupération des produits : " + e.getMessage());
+                errorResponse.setCode(500);
+                return Mono.just(errorResponse);
+            });
+    }
+
+    private IShopProduct normalizeProduct(IShopProduct product) {
+        // Correction du rating si égal au product_id
+        if (product.getAvg_rating() != null && 
+            Math.abs(product.getAvg_rating() - product.getProduct_id()) < 0.0001) {
+            product.setAvg_rating(DEFAULT_RATING);
+        }
+        
+        // S'assurer que le rating est entre MIN_RATING et MAX_RATING
+        if (product.getAvg_rating() != null) {
+            product.setAvg_rating(
+                Math.min(Math.max(product.getAvg_rating(), MIN_RATING), MAX_RATING)
+            );
+        }
+
+        // Définir la devise par défaut si null
+        if (product.getCurrency() == null) {
+            product.setCurrency(DEFAULT_CURRENCY);
+        }
+
+        return product;
+    }    private IShopProductResponse createPaginatedResponse(List<IShopProduct> products, Integer nextOffset) {
+        int start = nextOffset;
+        int end = Math.min(start + DEFAULT_LIMIT, products.size());
+        
+        IShopProductResponse response = new IShopProductResponse();
+        response.setStatus("success");
+        response.setCode(200);
+        response.setResult(products.subList(start, end));
+        
+        // Pour les appels API, on utilise la taille actuelle comme total
+        // car ces produits seront mis en cache ensuite
+        Integer nextPage = end < products.size() ? end : null;
+        response.setPagination(new PaginationMetadata(
+            nextOffset,
+            DEFAULT_LIMIT,
+            products.size(), // total exact de cette réponse API
+            nextPage
+        ));
+        
+        return response;
     }
 }
 

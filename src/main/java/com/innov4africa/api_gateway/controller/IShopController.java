@@ -248,4 +248,59 @@ public class IShopController {
         error.setCode(status);
         return ResponseEntity.status(status).body(error);
     }
+
+    @Operation(summary = "Liste des produits i-shop", 
+              description = "Récupère la liste des produits avec pagination")
+    @GetMapping("/products")
+    public Mono<ResponseEntity<IShopProductResponse>> listProducts(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam(defaultValue = "0") Integer next_offset,
+            @RequestParam(defaultValue = "fr") String language) {
+        
+        // Vérification du token
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            IShopProductResponse error = new IShopProductResponse();
+            error.setStatus("error");
+            error.setMessage("Token d'authentification manquant ou invalide");
+            error.setCode(401);
+            return Mono.just(ResponseEntity.status(401).body(error));
+        }
+        
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            IShopProductResponse error = new IShopProductResponse();
+            error.setStatus("error");
+            error.setMessage("Token invalide ou expiré");
+            error.setCode(401);
+            return Mono.just(ResponseEntity.status(401).body(error));
+        }
+
+        // Extraction des infos utilisateur
+        Integer userId;
+        try {
+            var ishopInfo = jwtUtil.extractIShopInfo(token);
+            userId = 725; // Valeur de test pour le développement
+        } catch (Exception e) {
+            IShopProductResponse error = new IShopProductResponse();
+            error.setStatus("error");
+            error.setMessage("Erreur lors de l'extraction des informations utilisateur");
+            error.setCode(500);
+            return Mono.just(ResponseEntity.status(500).body(error));
+        }
+
+        // Création de la requête
+        IShopProductRequest request = new IShopProductRequest(userId, next_offset, language);
+
+        // Appel au service
+        return iShopService.listProducts(request)
+            .map(ResponseEntity::ok)
+            .onErrorResume(e -> {
+                logger.error("Erreur lors de la récupération des produits", e);
+                IShopProductResponse error = new IShopProductResponse();
+                error.setStatus("error");
+                error.setMessage("Erreur interne du serveur : " + e.getMessage());
+                error.setCode(500);
+                return Mono.just(ResponseEntity.status(500).body(error));
+            });
+    }
 }
