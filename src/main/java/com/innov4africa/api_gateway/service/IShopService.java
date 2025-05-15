@@ -14,7 +14,9 @@ import com.innov4africa.api_gateway.model.IShopLoginResponse;
 import com.innov4africa.api_gateway.model.IShopNotificationRequest;
 import com.innov4africa.api_gateway.model.IShopNotificationResponse;
 import com.innov4africa.api_gateway.model.IShopOrderResponse;
-
+import com.innov4africa.api_gateway.model.IShopOrder;
+import java.util.List;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -108,16 +110,27 @@ public class IShopService {
     }    public Mono<IShopOrderResponse> listSellerOrders(Integer userId, String type) {
         logger.info("Appel distant iShop pour la liste des commandes vendeur: user_id={}, type={}", 
             userId, type);
-        
         return webClient.get()
             .uri(baseUrl + "/mobile-ws/product/myorders_seller?user_id={userId}&type={type}", 
                  userId, type)
             .retrieve()
-            .bodyToMono(IShopOrderResponse.class)
+            .bodyToMono(new org.springframework.core.ParameterizedTypeReference<List<IShopOrder>>() {})
+            .map(orders -> {
+                IShopOrderResponse response = new IShopOrderResponse();
+                response.setStatus("success");
+                response.setMessage("Commandes récupérées avec succès");
+                response.setData(orders);
+                response.setCode(200);
+                return response;
+            })
             .doOnNext(response -> logger.debug("Réponse iShop commandes: {}", response))
             .onErrorResume(e -> {
                 logger.error("Erreur lors de la récupération des commandes vendeur iShop", e);
-                return Mono.error(new RuntimeException("Erreur lors de la récupération des commandes vendeur iShop")); 
+                IShopOrderResponse errorResponse = new IShopOrderResponse();
+                errorResponse.setStatus("error");
+                errorResponse.setMessage("Erreur lors de la récupération des commandes : " + e.getMessage());
+                errorResponse.setCode(500);
+                return Mono.just(errorResponse);
             });
     }
 }
