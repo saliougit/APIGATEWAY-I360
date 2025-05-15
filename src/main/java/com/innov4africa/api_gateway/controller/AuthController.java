@@ -78,7 +78,7 @@ public class AuthController {
     //                         jwtUtil.extractUserType(token).equalsIgnoreCase("Seller"));
             
     //         if (response.isSeller()) {
-    //             IShopInfo ishopInfo = jwtUtil.extractIShopInfo(token);
+    //              ishopInfo = jwtUtil.extractIShopInfo(token);
     //             response.setIshopInfo(ishopInfo);
     //         }
             
