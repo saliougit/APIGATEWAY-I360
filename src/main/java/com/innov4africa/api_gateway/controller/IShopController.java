@@ -18,7 +18,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.innov4africa.api_gateway.model.*;
-import com.innov4africa.api_gateway.model.OrderType;
 import com.innov4africa.api_gateway.service.IShopService;
 import com.innov4africa.api_gateway.service.JwtUtil;
 import com.innov4africa.api_gateway.service.IShopCategoryService;
@@ -211,7 +210,7 @@ public class IShopController {
         }
         // Validation du type
         try {
-            OrderType orderType = OrderType.valueOf(type.toUpperCase());
+         
         } catch (IllegalArgumentException e) {
             return Mono.just(buildErrorResponseOrder(400, "Type invalide. Valeurs acceptées : NEW, PENDING, PAST"));
         }
