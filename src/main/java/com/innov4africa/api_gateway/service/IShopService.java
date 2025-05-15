@@ -37,10 +37,12 @@ public class IShopService {
     private static final String DEFAULT_LANGUAGE = "fr";
 
     @Value("${ishop.base-url}")
-    private String baseUrl;    
-
-    @Autowired
+    private String baseUrl;        @Autowired
     private IShopProductCacheService productCache;
+    
+    @Autowired
+    private InMemoryProductCache tempCache;
+    
     public IShopService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
             .baseUrl("https://ibusinesscompanies.com:8443")
@@ -152,27 +154,33 @@ public class IShopService {
     }    public Mono<IShopProductResponse> listProducts(IShopProductRequest request) {
         logger.info("Récupération des produits pour user_id={}, next_offset={}", 
             request.getUser_id(), request.getNext_offset());
-          // Vérifier le cache d'abord
-        List<IShopProduct> cachedProducts = productCache.getCachedProducts(
-            request.getUser_id(), request.getLanguage());
-        
-        if (cachedProducts != null) {
-            logger.debug("Produits trouvés dans le cache, total items: {}", cachedProducts.size());
+          
+        // Essayer d'abord Redis
+        List<IShopProduct> products = null;
+        try {
+            products = productCache.getCachedProducts(request.getUser_id(), request.getLanguage());
+        } catch (Exception e) {
+            logger.warn("Redis indisponible: {}", e.getMessage());
+            // Si Redis est down, essayer le cache temporaire
+            products = tempCache.get(String.valueOf(request.getUser_id()), request.getLanguage());
+        }
+          if (products != null) {
+            logger.debug("Produits trouvés dans le cache, total items: {}", products.size());
             IShopProductResponse response = new IShopProductResponse();
             response.setStatus("success");
             response.setCode(200);
             
             // Calculer la sous-liste pour la page demandée
             int start = request.getNext_offset();
-            int end = Math.min(start + DEFAULT_LIMIT, cachedProducts.size());
-            response.setResult(cachedProducts.subList(start, end));
+            int end = Math.min(start + DEFAULT_LIMIT, products.size());
+            response.setResult(products.subList(start, end));
             
             // Configurer la pagination avec le total exact du cache
-            Integer nextPage = end < cachedProducts.size() ? end : null;
+            Integer nextPage = end < products.size() ? end : null;
             response.setPagination(new PaginationMetadata(
                 request.getNext_offset(),
                 DEFAULT_LIMIT,
-                cachedProducts.size(),
+                products.size(),
                 nextPage
             ));
             return Mono.just(response);
@@ -191,9 +199,14 @@ public class IShopService {
                     List<IShopProduct> normalizedProducts = response.getResult().stream()
                         .map(this::normalizeProduct)
                         .collect(Collectors.toList());
-                    
-                    // Mettre en cache
-                    productCache.cacheProducts(request.getUser_id(), request.getLanguage(), normalizedProducts);
+                      // Essayer de mettre en cache Redis
+                    try {
+                        productCache.cacheProducts(request.getUser_id(), request.getLanguage(), normalizedProducts);
+                    } catch (Exception e) {
+                        logger.warn("Impossible de mettre en cache Redis: {}", e.getMessage());
+                        // Utiliser le cache temporaire comme fallback
+                        tempCache.store(String.valueOf(request.getUser_id()), request.getLanguage(), normalizedProducts);
+                    }
                     
                     // Créer la réponse paginée
                     return createPaginatedResponse(normalizedProducts, request.getNext_offset());
