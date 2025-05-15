@@ -2,6 +2,7 @@ package com.innov4africa.api_gateway.controller;
 
 import java.util.Map;
 import java.util.Arrays;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ import com.innov4africa.api_gateway.model.*;
 import com.innov4africa.api_gateway.model.OrderType;
 import com.innov4africa.api_gateway.service.IShopService;
 import com.innov4africa.api_gateway.service.JwtUtil;
+import com.innov4africa.api_gateway.service.IShopCategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,6 +39,9 @@ public class IShopController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private IShopCategoryService categoryService;
 
     @Operation(summary = "Authentification i-shop",
               description = "Authentifie un utilisateur auprès du service i-shop")
@@ -99,14 +104,6 @@ public class IShopController {
         Integer ishopUserId = null;
         try {
             var ishopInfo = jwtUtil.extractIShopInfo(token);
-            // if (ishopInfo == null || ishopInfo.getUser_id() == null) {
-            //     IShopAddressResponse error = new IShopAddressResponse();
-            //     error.setStatus("error");
-            //     error.setMessage("Accès refusé : utilisateur iShop introuvable dans le token.");
-            //     error.setCode(403);
-            //     return Mono.just(ResponseEntity.status(403).body(error));
-            // }
-            // ishopUserId = ishopInfo.getUser_id();
             ishopUserId = 725; // Valeur de test pour le développement
         } catch (Exception e) {
             IShopAddressResponse error = new IShopAddressResponse();
@@ -153,14 +150,6 @@ public class IShopController {
         Integer ishopUserId;
         try {
             var ishopInfo = jwtUtil.extractIShopInfo(token);
-           // if (ishopInfo == null || ishopInfo.getUser_id() == null) {
-            //     IShopAddressResponse error = new IShopAddressResponse();
-            //     error.setStatus("error");
-            //     error.setMessage("Accès refusé : utilisateur iShop introuvable dans le token.");
-            //     error.setCode(403);
-            //     return Mono.just(ResponseEntity.status(403).body(error));
-            // }
-            // ishopUserId = ishopInfo.getUser_id();
             ishopUserId = 725; // Valeur de test pour le développement
         } catch (Exception e) {
             return Mono.just(buildErrorResponse(500, "Erreur lors de l'extraction des informations utilisateur"));
@@ -219,7 +208,8 @@ public class IShopController {
             ishopUserId = 725; // Valeur de test pour le développement
         } catch (Exception e) {
             return Mono.just(buildErrorResponseOrder(500, "Erreur lors de l'extraction des informations utilisateur"));
-        }        // Validation du type
+        }
+        // Validation du type
         try {
             OrderType orderType = OrderType.valueOf(type.toUpperCase());
         } catch (IllegalArgumentException e) {
@@ -303,4 +293,169 @@ public class IShopController {
                 return Mono.just(ResponseEntity.status(500).body(error));
             });
     }
+
+    @Operation(summary = "Liste les domaines disponibles",
+              description = "Retourne la liste des domaines (marketplaces) accessibles pour l'utilisateur")
+    @GetMapping("/domaines")
+    public Mono<ResponseEntity<IShopDomainesResponse>> getDomaines(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
+        // Vérification du token
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return Mono.just(buildErrorGeneric(401, "Token d'authentification manquant ou invalide"));
+        }
+        
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            return Mono.just(buildErrorGeneric(401, "Token invalide ou expiré"));
+        }
+
+        // Extraction des infos utilisateur
+        Integer userId;
+        // userId = ishopInfo.getUser_id()
+        userId = 725; // Valeur de test pour le développement
+        try {
+            var ishopInfo = jwtUtil.extractIShopInfo(token);
+            if (ishopInfo == null || userId == null) {
+                logger.error("Information utilisateur iShop manquante dans le token");
+                throw new RuntimeException("Information utilisateur iShop manquante dans le token");
+            }
+          
+        } catch (Exception e) {
+            logger.error("Erreur lors de l'extraction des informations utilisateur", e);
+            return Mono.just(buildErrorGeneric(500, "Erreur lors de l'extraction des informations utilisateur"));
+        }
+
+        return categoryService.getDomaines(userId)
+            .map(domaines -> {
+                IShopDomainesResponse response = new IShopDomainesResponse();
+                response.setStatus("success");
+                response.setCode(200);
+                response.setData(domaines);
+                return ResponseEntity.ok(response);
+            })
+            .defaultIfEmpty(buildErrorGeneric(404, "Aucun domaine trouvé"));
+    }
+
+    @Operation(summary = "Liste les catégories d'un domaine",
+              description = "Retourne la liste des catégories disponibles dans un domaine spécifique")
+    @GetMapping("/categories")
+    public Mono<ResponseEntity<IShopCategoriesResponse>> getCategories(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam Integer domaineId) {
+        
+        // Vérification du token
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return Mono.just(buildErrorGeneric(401, "Token d'authentification manquant ou invalide"));
+        }
+        
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            return Mono.just(buildErrorGeneric(401, "Token invalide ou expiré"));
+        }
+
+        // Extraction des infos utilisateur
+        Integer userId;
+        userId = 725; // Valeur de test pour le développement
+        try {
+            var ishopInfo = jwtUtil.extractIShopInfo(token);
+            if (ishopInfo == null || userId == null) {
+                logger.error("Information utilisateur iShop manquante dans le token");
+                throw new RuntimeException("Information utilisateur iShop manquante dans le token");
+            }
+            // userId = ishopInfo.getUser_id();
+            
+        } catch (Exception e) {
+            logger.error("Erreur lors de l'extraction des informations utilisateur", e);
+            return Mono.just(buildErrorGeneric(500, "Erreur lors de l'extraction des informations utilisateur"));
+        }
+
+        if (domaineId == null) {
+            return Mono.just(buildErrorGeneric(400, "ID du domaine manquant"));
+        }
+
+        return categoryService.getCategories(userId, domaineId)
+            .map(categories -> {
+                IShopCategoriesResponse response = new IShopCategoriesResponse();
+                response.setStatus("success");
+                response.setCode(200);
+                response.setData(categories);
+                return ResponseEntity.ok(response);
+            })
+            .defaultIfEmpty(buildErrorGeneric(404, "Aucune catégorie trouvée pour ce domaine"));
+    }
+
+    @Operation(summary = "Liste les sous-catégories",
+              description = "Retourne la liste des sous-catégories d'une catégorie spécifique")
+    @GetMapping("/sous-categories")
+    public Mono<ResponseEntity<IShopCategoriesResponse>> getSousCategories(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam Integer categorieId) {
+        
+        // Vérification du token
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.error("Token manquant ou ne commence pas par 'Bearer'");
+            return Mono.just(buildErrorGeneric(401, "Token d'authentification manquant ou invalide"));
+        }
+        
+        String token = authHeader.substring(7);
+        logger.debug("Token reçu: {}", token);
+        
+        boolean isValid = jwtUtil.validateToken(token);
+        logger.debug("Token validation result: {}", isValid);
+        
+        if (!isValid) {
+            logger.error("Token invalide après validation");
+            return Mono.just(buildErrorGeneric(401, "Token invalide ou expiré"));
+        }
+
+        // Extraction des infos utilisateur
+        Integer userId;
+        // userId = ishopInfo.getUser_id();
+        userId = 725; // Valeur de test pour le développement
+        try {
+            var ishopInfo = jwtUtil.extractIShopInfo(token);
+            if (ishopInfo == null || userId == null) {
+                logger.error("Information utilisateur iShop manquante dans le token");
+                throw new RuntimeException("Information utilisateur iShop manquante dans le token");
+            }
+           
+        } catch (Exception e) {
+            logger.error("Erreur lors de l'extraction des informations utilisateur", e);
+            return Mono.just(buildErrorGeneric(500, "Erreur lors de l'extraction des informations utilisateur"));
+        }
+
+        if (categorieId == null) {
+            return Mono.just(buildErrorGeneric(400, "ID de la catégorie manquant"));
+        }
+
+        return categoryService.getSousCategories(userId,categorieId)
+            .map(sousCategories -> {
+                IShopCategoriesResponse response = new IShopCategoriesResponse();
+                response.setStatus("success");
+                response.setCode(200);
+                response.setData(sousCategories);
+                return ResponseEntity.ok(response);
+            })
+            .defaultIfEmpty(buildErrorGeneric(404, "Aucune sous-catégorie trouvée pour cette catégorie"));
+    }
+
+    private <T> ResponseEntity<T> buildErrorGeneric(int status, String message) {
+        try {
+            @SuppressWarnings("unchecked")
+            T response = (T) Class.forName("com.innov4africa.api_gateway.model.IShop" + 
+                (message.contains("domaine") ? "Domaines" : "Categories") + "Response")
+                .getDeclaredConstructor().newInstance();
+            
+            response.getClass().getMethod("setStatus", String.class).invoke(response, "error");
+            response.getClass().getMethod("setMessage", String.class).invoke(response, message);
+            response.getClass().getMethod("setCode", Integer.class).invoke(response, status);
+            
+            return ResponseEntity.status(status).body(response);
+        } catch (Exception e) {
+            logger.error("Erreur lors de la création de la réponse d'erreur", e);
+            return ResponseEntity.status(500).body(null);
+        }
+    }
 }
+
