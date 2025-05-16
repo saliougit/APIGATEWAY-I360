@@ -40,18 +40,30 @@ springdoc:
     use-root-path: true
     enabled: true
     config-url: /v3/api-docs/swagger-config
+    tags-sorter: alpha
+    operations-sorter: method
+    doc-expansion: none
+    default-models-expand-depth: -1
     urls:
       - url: /v3/api-docs
         name: API Gateway
   api-docs:
-    path: /v3/api-docs
+    path: /api-docs
     enabled: true
   show-actuator: true
   packages-to-scan: com.innov4africa.api_gateway.controller
+  paths-to-match: 
+    - /ishop/**
+    - /ipay/**
+    - /ibanking/**
+    - /auth/**
+    - /wave/**
+    - /orange-money/**
 
 # Configuration URLs for OpenAPI
 openapi:
   dev-url: http://localhost:8080
+  prod-url: https://api.innov4africa.sn
 
 keycloak:
   auth-server-url: ${KEYCLOAK_SERVER_URL:https://137.184.94.79:8443/auth}

@@ -13,6 +13,7 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.tags.Tag;
 
 /**
  * Configuration pour OpenAPI/Swagger
@@ -21,52 +22,76 @@ import io.swagger.v3.oas.models.servers.Server;
 public class OpenAPIConfig {
 
     @Value("${openapi.dev-url}")
-    private String devUrl;
-
-    @Bean
+    private String devUrl;    @Bean
     public OpenAPI customOpenAPI() {
         Server devServer = new Server()
             .url(devUrl)
             .description("Serveur de développement");
+        
+        Server prodServer = new Server()
+            .url("https://api.innov4africa.sn")
+            .description("Serveur de production");
 
-        Contact contact = new Contact()
-            .name("Innov4Africa")
-            .email("contact@innov4africa.sn")
-            .url("https://innov4africa.sn");
+        // Exemple de schémas de réponses communes
+        Schema<?> errorSchema = new Schema<>()
+            .type("object")
+            .addProperties("status", new Schema<>().type("string").example("error"))
+            .addProperties("message", new Schema<>().type("string"))
+            .addProperties("code", new Schema<>().type("integer"))
+            .addProperties("data", new Schema<>().type("null"));
 
-        License license = new License()
-            .name("Propriétaire")
-            .url("https://innov4africa.sn/terms");
+        // Configuration générique de réponse API
+        Schema<?> apiResponseSchema = new Schema<>()
+            .type("object")
+            .addProperties("status", new Schema<>().type("string").example("success"))
+            .addProperties("message", new Schema<>().type("string"))
+            .addProperties("code", new Schema<>().type("integer").example(200))
+            .addProperties("data", new Schema<>().type("object"));
 
-        Info info = new Info()
-            .title("API Gateway Innov4Africa")
-            .version("1.0")
-            .contact(contact)
-            .description("API Gateway pour l'intégration des services financiers iPay et iBanking. " +
-                        "Cette API permet de gérer l'authentification unifiée et la synchronisation " +
-                        "des comptes entre les différents services.")
-            .license(license);
+        Components components = new Components()
+            .addSecuritySchemes("bearer-jwt", new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")
+                .in(SecurityScheme.In.HEADER)
+                .name("Authorization"))
+            .addSchemas("ErrorResponse", errorSchema)
+            .addSchemas("ApiResponse", apiResponseSchema);
 
-        // Configuration du schéma de sécurité JWT
-        SecurityScheme securityScheme = new SecurityScheme()
-            .type(SecurityScheme.Type.HTTP)
-            .scheme("bearer")
-            .bearerFormat("JWT")
-            .in(SecurityScheme.In.HEADER)
-            .name("Authorization");
+        // Ajout des tags pour regrouper les endpoints        // Tags pour la documentation
+        Tag authTag = new Tag().name("Authentication").description("Endpoints d'authentification globale");
+        Tag shopTag = new Tag().name("IShop").description("Services de la marketplace iShop");
+        Tag bankingTag = new Tag().name("IBanking").description("Services bancaires ibanking");
+        Tag payTag = new Tag().name("IPay").description("Services de paiement iPay");
+        Tag waveTag = new Tag().name("Wave").description("Intégration des services Wave");
+        Tag orangeTag = new Tag().name("Orange Money").description("Intégration Orange Money");
+        Tag productTag = new Tag().name("Products").description("Gestion des produits iShop");
+        Tag orderTag = new Tag().name("Orders").description("Gestion des commandes iShop");
+        Tag userTag = new Tag().name("Users").description("Gestion des utilisateurs");
 
         return new OpenAPI()
-            .info(info)
+            .info(new Info()
+                .title("API Gateway iShop")
+                .version("1.0")
+                .description("API Gateway pour les services iShop. Cette documentation permet l'intégration rapide avec les clients mobiles.")
+                .contact(new Contact()
+                    .name("Innov4Africa")
+                    .email("contact@innov4africa.sn")
+                    .url("https://innov4africa.sn"))
+                .license(new License()
+                    .name("Propriétaire")
+                    .url("https://innov4africa.sn/terms")))
             .addServersItem(devServer)
             .addSecurityItem(new SecurityRequirement().addList("bearer-jwt"))
-            .components(new Components()
-                .addSecuritySchemes("bearer-jwt", securityScheme)
-                .addSchemas("ErrorResponse", new Schema<>()
-                    .type("object")
-                    .addProperties("status", new Schema<>().type("string"))
-                    .addProperties("message", new Schema<>().type("string"))
-                    .addProperties("timestamp", new Schema<>().type("string").format("date-time"))
-                )
-            );
+            .components(components)            .addTagsItem(authTag)
+            .addTagsItem(shopTag)
+            .addTagsItem(bankingTag)
+            .addTagsItem(payTag)
+            .addTagsItem(waveTag)
+            .addTagsItem(orangeTag)
+            .addTagsItem(productTag)
+            .addTagsItem(orderTag)
+            .addTagsItem(userTag)
+            .addServersItem(prodServer);
     }
 }
