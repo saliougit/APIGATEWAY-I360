@@ -11,6 +11,9 @@ import reactor.core.publisher.Mono;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import com.innov4africa.api_gateway.model.IBankingTokenResponse;
+import com.innov4africa.api_gateway.model.IBankingBalanceResponse;
+import com.innov4africa.api_gateway.model.ServiceStatus;
+import com.innov4africa.api_gateway.model.GlobalBalanceResponse;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
@@ -170,5 +173,26 @@ public class IBankingService {
                         return Mono.just(false);
                     });
             });
+    }
+
+    /**
+     * Récupère le solde d'un utilisateur iBanking (mock pour le moment)
+     * Le solde généré est compris entre 500 et 5000 FCFA, et est déterministe pour un même email
+     */
+    public Mono<IBankingBalanceResponse> getSolde(String userEmail) {
+        logger.info("Récupération du solde iBanking pour l'utilisateur: {}", userEmail);
+        
+        // Utiliser le hashCode de l'email pour générer un montant déterministe
+        // Borne la valeur entre 500 et 5000 FCFA
+        int hashCode = Math.abs(userEmail.hashCode());
+        double montant = 500 + (hashCode % 4500); // Entre 500 et 5000
+        String montantFormate = String.format("%.2f", montant);
+        
+        return Mono.just(new IBankingBalanceResponse(
+            "success",
+            "Solde récupéré avec succès",
+            montantFormate,
+            List.of(new ServiceStatus("i-banking", true, "Solde récupéré"))
+        ));
     }
 }
