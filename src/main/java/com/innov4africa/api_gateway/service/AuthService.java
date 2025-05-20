@@ -40,22 +40,140 @@ public class AuthService {
     private TokenRepository tokenRepository;
     
     @Autowired
-    private UserSessionRepository userSessionRepository;    
-
-    public Mono<AuthResponse> authenticate(AuthRequest request) {
+    private UserSessionRepository userSessionRepository;        public Mono<AuthResponse> authenticate(AuthRequest request) {
         String email = request.getEmail();
         String password = request.getPassword();
 
-        // D'abord vérifier iPay seul
+        // Préparer la requête iShop qui sera utilisée dans les deux cas
+        Mono<com.innov4africa.api_gateway.model.IShopLoginResponse> ishopMono = 
+            iShopService.login(new IShopLoginRequest(email, password));
+
+        // Vérifier iPay
         return ipayService.authenticate(email, password)
             .flatMap(initialAuthResult -> {
                 if (isSessionEnCours(initialAuthResult)) {
-                    logger.info("Session en cours détectée pour {}, forçage déconnexion/reconnexion", email);
-                    return forceDisconnectAndReconnect(initialAuthResult.getToken(), email, password)
-                        .flatMap(newAuthResult -> processAuthentication(email, password, newAuthResult));
+                    logger.info("Session en cours détectée pour {}, lancement parallèle", email);
+                    // Lancer la déconnexion/reconnexion iPay en parallèle avec iShop
+                    Mono<AuthResult> reconnectMono = forceDisconnectAndReconnect(initialAuthResult.getToken(), email, password);
+                    
+                    // Attendre les deux résultats
+                    return Mono.zip(reconnectMono, ishopMono)
+                        .flatMap(tuple -> {
+                            AuthResult newAuthResult = tuple.getT1();
+                            com.innov4africa.api_gateway.model.IShopLoginResponse ishopResponse = tuple.getT2();
+                            return processAuthenticationWithIShop(email, password, newAuthResult, ishopResponse);
+                        });
                 } else {
-                    return processAuthentication(email, password, initialAuthResult);
+                    // Cas normal : utiliser directement le résultat iShop
+                    return ishopMono.flatMap(ishopResponse ->
+                        processAuthenticationWithIShop(email, password, initialAuthResult, ishopResponse));
                 }
+            });
+    }
+
+    private Mono<AuthResponse> processAuthenticationWithIShop(
+            String email, 
+            String password, 
+            AuthResult ipayResult,
+            com.innov4africa.api_gateway.model.IShopLoginResponse ishopResponse) {
+        
+        if (!ipayResult.isSuccess()) {
+            return Mono.just(buildErrorResponse(ipayResult.getMessage()));
+        }
+
+        String ipayToken = ipayResult.getToken();
+        String telephone = ipayResult.getTelephone();
+        String userId = ipayResult.getIduser();
+
+        // Sauvegarder la session iPay
+        if (ipayToken != null && (userId != null || telephone != null)) {
+            userSessionRepository.saveUserSession(ipayToken, userId, telephone);
+        }
+
+        // Préparer les données iShop (déjà reçues en parallèle)
+        boolean ishopSuccess = ishopResponse != null && "success".equalsIgnoreCase(ishopResponse.getStatus());
+        boolean isSeller = ishopSuccess && ishopResponse.getUser_type() != null && 
+                          "Seller".equalsIgnoreCase(ishopResponse.getUser_type());
+
+        List<ServiceStatus> services = new ArrayList<>();
+        services.add(new ServiceStatus("i-pay", true, "Authentification iPay réussie"));
+        if (ishopSuccess) {
+            services.add(new ServiceStatus("i-shop", true, 
+                isSeller ? "Compte seller iShop validé" : "Compte buyer iShop"));
+        } else {
+            String ishopMsg = (ishopResponse != null && ishopResponse.getMessage() != null) ? 
+                ishopResponse.getMessage() : "Erreur d'authentification iShop";
+            services.add(new ServiceStatus("i-shop", false, ishopMsg));
+        }
+
+        // D'abord récupérer l'accountId iPay
+        return ipayService.getAllListAccount(ipayToken, telephone)
+            .flatMap(xmlResponse -> {
+                String accountIdIPay = ipayService.extractAccountIdFromResponse(xmlResponse);
+                
+                // Ensuite vérifier/créer iBanking avec les infos iPay
+                return iBankingService.verifyUserExists(email, telephone)
+                    .flatMap(existsInIBanking -> {
+                        if (!existsInIBanking) {
+                            return iBankingService.createUser(
+                                email, telephone, ipayResult.getPrenom(),
+                                ipayResult.getNom(), password
+                            ).map(created -> {
+                                services.add(new ServiceStatus("i-banking", created,
+                                    created ? "Compte iBanking créé avec succès" : "Échec de la création du compte iBanking"));
+                                return accountIdIPay;
+                            });
+                        } else {
+                            services.add(new ServiceStatus("i-banking", true, "Compte iBanking disponible"));
+                            return Mono.just(accountIdIPay);
+                        }
+                    })
+                    .map(finalAccountId -> {
+                        // Génération finale du token avec toutes les infos
+                        String jwtToken;
+                        IShopInfo ishopInfo = null;
+                        String globalMessage;
+
+                        if (isSeller && ishopSuccess) {
+                            ishopInfo = IShopInfo.fromLoginResponse(ishopResponse);
+                            jwtToken = jwtUtil.generateCompleteSellerToken(
+                                email, ipayToken, telephone, userId, finalAccountId, ishopInfo);
+                            globalMessage = "Authentification SSO réussie (Seller)";
+                        } else {
+                            jwtToken = jwtUtil.generateIpayTokenWithAccount(
+                                email, ipayToken, telephone, userId, finalAccountId);
+                            globalMessage = "Authentification réussie";
+                        }
+
+                        return new AuthResponse(
+                            "success",
+                            globalMessage,
+                            jwtToken,
+                            services,
+                            ishopInfo,
+                            isSeller
+                        );
+                    });
+            })
+            .onErrorResume(e -> {
+                logger.error("Erreur lors du processus d'authentification", e);
+                services.add(new ServiceStatus("i-banking", false, 
+                    "Service iBanking temporairement indisponible"));
+                
+                // Fallback sans accountId
+                String jwtToken = isSeller ? 
+                    jwtUtil.generateTokenWithIShopInfo(email, ipayToken, telephone, userId, 
+                        IShopInfo.fromLoginResponse(ishopResponse)) :
+                    jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
+                
+                return Mono.just(new AuthResponse(
+                    "success",
+                    "Authentification réussie (sans accountId)",
+                    jwtToken,
+                    services,
+                    isSeller ? IShopInfo.fromLoginResponse(ishopResponse) : null,
+                    isSeller
+                ));
             });
     }
 
