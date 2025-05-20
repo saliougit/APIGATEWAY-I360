@@ -91,21 +91,7 @@ public class AggregationService {
                     services.add(new ServiceStatus("i-pay", false, message));
                 } else {
                     montantIPay = xpath.evaluate("//return/montant", doc);
-                    // Vérifier si le montant est valide et non nul
-                    boolean montantValide = montantIPay != null && 
-                                          !montantIPay.equals("0.00") && 
-                                          !montantIPay.equals("0,00") &&
-                                          !montantIPay.trim().isEmpty();
-                    
-                    services.add(new ServiceStatus(
-                        "i-pay", 
-                        montantValide, 
-                        montantValide ? "Solde récupéré" : "Solde nul ou invalide"
-                    ));
-                    
-                    if (!montantValide) {
-                        montantIPay = "0.00";
-                    }
+                    services.add(new ServiceStatus("i-pay", true, "Solde récupéré"));
                 }
 
                 // Traiter la réponse iBanking
