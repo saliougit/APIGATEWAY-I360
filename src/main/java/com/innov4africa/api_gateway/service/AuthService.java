@@ -1,5 +1,6 @@
 package com.innov4africa.api_gateway.service;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -106,75 +107,79 @@ public class AuthService {
             services.add(new ServiceStatus("i-shop", false, ishopMsg));
         }
 
-        // D'abord récupérer l'accountId iPay
-        return ipayService.getAllListAccount(ipayToken, telephone)
-            .flatMap(xmlResponse -> {
-                String accountIdIPay = ipayService.extractAccountIdFromResponse(xmlResponse);
-                
-                // Ensuite vérifier/créer iBanking avec les infos iPay
-                return iBankingService.verifyUserExists(email, telephone)
-                    .flatMap(existsInIBanking -> {
-                        if (!existsInIBanking) {
-                            return iBankingService.createUser(
-                                email, telephone, ipayResult.getPrenom(),
-                                ipayResult.getNom(), password
-                            ).map(created -> {
-                                services.add(new ServiceStatus("i-banking", created,
-                                    created ? "Compte iBanking créé avec succès" : "Échec de la création du compte iBanking"));
-                                return accountIdIPay;
-                            });
-                        } else {
-                            services.add(new ServiceStatus("i-banking", true, "Compte iBanking disponible"));
-                            return Mono.just(accountIdIPay);
-                        }
-                    })
-                    .map(finalAccountId -> {
-                        // Génération finale du token avec toutes les infos
-                        String jwtToken;
-                        IShopInfo ishopInfo = null;
-                        String globalMessage;
+        // Exécuter getAllListAccount et iBanking en parallèle
+        return Mono.zip(
+            // Premier flux : récupération de l'accountId avec retry
+            ipayService.getAllListAccount(ipayToken, telephone)
+                .map(xml -> ipayService.extractAccountIdFromResponse(xml))
+                .retryWhen(
+                    reactor.util.retry.Retry.backoff(2, java.time.Duration.ofMillis(300))
+                        .maxBackoff(java.time.Duration.ofSeconds(1))
+                ),
+            // Deuxième flux : vérification/création iBanking
+            iBankingService.verifyUserExists(email, telephone)
+                .flatMap(exists -> {
+                    if (!exists) {
+                        return iBankingService.createUser(
+                            email, telephone, ipayResult.getPrenom(),
+                            ipayResult.getNom(), password
+                        ).map(created -> {
+                            services.add(new ServiceStatus("i-banking", created,
+                                created ? "Compte iBanking créé avec succès" : "Échec de la création du compte iBanking"));
+                            return created;
+                        });
+                    } else {
+                        services.add(new ServiceStatus("i-banking", true, "Compte iBanking disponible"));
+                        return Mono.just(true);
+                    }
+                })
+        ).flatMap(tuple -> {
+            String accountIdIPay = tuple.getT1();
+            boolean ibankingResult = tuple.getT2();
 
-                        if (isSeller && ishopSuccess) {
-                            ishopInfo = IShopInfo.fromLoginResponse(ishopResponse);
-                            jwtToken = jwtUtil.generateCompleteSellerToken(
-                                email, ipayToken, telephone, userId, finalAccountId, ishopInfo);
-                            globalMessage = "Authentification SSO réussie (Seller)";
-                        } else {
-                            jwtToken = jwtUtil.generateIpayTokenWithAccount(
-                                email, ipayToken, telephone, userId, finalAccountId);
-                            globalMessage = "Authentification réussie";
-                        }
+            // Génération finale du token avec toutes les infos
+            String jwtToken;
+            IShopInfo ishopInfo = null;
+            String globalMessage;
 
-                        return new AuthResponse(
-                            "success",
-                            globalMessage,
-                            jwtToken,
-                            services,
-                            ishopInfo,
-                            isSeller
-                        );
-                    });
-            })
-            .onErrorResume(e -> {
-                logger.error("Erreur lors du processus d'authentification", e);
-                services.add(new ServiceStatus("i-banking", false, 
-                    "Service iBanking temporairement indisponible"));
-                
-                // Fallback sans accountId
-                String jwtToken = isSeller ? 
-                    jwtUtil.generateTokenWithIShopInfo(email, ipayToken, telephone, userId, 
-                        IShopInfo.fromLoginResponse(ishopResponse)) :
-                    jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
-                
-                return Mono.just(new AuthResponse(
-                    "success",
-                    "Authentification réussie (sans accountId)",
-                    jwtToken,
-                    services,
-                    isSeller ? IShopInfo.fromLoginResponse(ishopResponse) : null,
-                    isSeller
-                ));
-            });
+            if (isSeller && ishopSuccess) {
+                ishopInfo = IShopInfo.fromLoginResponse(ishopResponse);
+                jwtToken = jwtUtil.generateCompleteSellerToken(
+                    email, ipayToken, telephone, userId, accountIdIPay, ishopInfo);
+                globalMessage = "Authentification SSO réussie (Seller)";
+            } else {
+                jwtToken = jwtUtil.generateIpayTokenWithAccount(
+                    email, ipayToken, telephone, userId, accountIdIPay);
+                globalMessage = "Authentification réussie";
+            }
+
+            return Mono.just(new AuthResponse(
+                "success",
+                globalMessage,
+                jwtToken,
+                services,
+                ishopInfo,
+                isSeller
+            ));
+        }).onErrorResume(e -> {
+            logger.error("Erreur lors du processus d'authentification", e);
+            services.add(new ServiceStatus("i-banking", false, 
+                "Service iBanking temporairement indisponible"));
+            
+            String jwtToken = isSeller ? 
+                jwtUtil.generateTokenWithIShopInfo(email, ipayToken, telephone, userId, 
+                    IShopInfo.fromLoginResponse(ishopResponse)) :
+                jwtUtil.generateIpayToken(email, ipayToken, telephone, userId);
+            
+            return Mono.just(new AuthResponse(
+                "success",
+                "Authentification réussie (sans accountId)",
+                jwtToken,
+                services,
+                isSeller ? IShopInfo.fromLoginResponse(ishopResponse) : null,
+                isSeller
+            ));
+        });
     }
 
     private Mono<AuthResponse> processAuthentication(String email, String password, AuthResult ipayResult) {
@@ -354,19 +359,22 @@ public class AuthService {
         return authResult.getMessage() != null && 
                authResult.getMessage().contains("session en cours") &&
                authResult.getToken() != null;
-    }
-
-    private Mono<AuthResult> forceDisconnectAndReconnect(String existingToken, String email, String password) {
+    }    private Mono<AuthResult> forceDisconnectAndReconnect(String existingToken, String email, String password) {
         return ipayService.deconnexionUser(existingToken)
             .flatMap(deconnectResponse -> {
                 logger.info("Déconnexion forcée effectuée pour: {}", email);
-                return Mono.delay(java.time.Duration.ofMillis(1500))
-                    .then(ipayService.authenticate(email, password));
+                return ipayService.authenticate(email, password)
+                    .retryWhen(reactor.util.retry.Retry.backoff(3, Duration.ofMillis(500))
+                        .maxBackoff(Duration.ofSeconds(2))
+                        .doBeforeRetry(retrySignal -> 
+                            logger.info("Tentative de reconnexion {} pour {}", 
+                                retrySignal.totalRetries() + 1, email)));
             })
             .onErrorResume(e -> {
                 logger.error("Erreur lors de la déconnexion forcée", e);
-                return Mono.delay(java.time.Duration.ofMillis(1500))
-                    .then(ipayService.authenticate(email, password));
+                return ipayService.authenticate(email, password)
+                    .retryWhen(reactor.util.retry.Retry.backoff(2, Duration.ofMillis(500))
+                        .maxBackoff(Duration.ofSeconds(1)));
             });
     }
 }
