@@ -1,22 +1,27 @@
 package com.innov4africa.api_gateway.service;
 
-import com.innov4africa.api_gateway.model.ServiceStatus;
-// import com.innov4africa.api_gateway.model.GlobalBalanceResponse;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPathFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
-import javax.xml.xpath.XPathFactory;
-import java.io.StringReader;
 import org.xml.sax.InputSource;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.innov4africa.api_gateway.model.GlobalBalanceResponse;
+import com.innov4africa.api_gateway.model.IBankingBalanceResponse;
+import com.innov4africa.api_gateway.model.ServiceStatus;
+
+import reactor.core.publisher.Mono;
 
 @Service
 public class AggregationService {

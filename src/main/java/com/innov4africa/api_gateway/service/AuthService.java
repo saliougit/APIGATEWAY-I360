@@ -1,6 +1,5 @@
 package com.innov4africa.api_gateway.service;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,33 +40,39 @@ public class AuthService {
     private TokenRepository tokenRepository;
     
     @Autowired
-    private UserSessionRepository userSessionRepository;
+    private UserSessionRepository userSessionRepository;    
 
     public Mono<AuthResponse> authenticate(AuthRequest request) {
         String email = request.getEmail();
         String password = request.getPassword();
 
-        // Lancer iPay et iShop en parallèle
-        Mono<AuthResult> ipayMono = ipayService.authenticate(email, password);
-        Mono<com.innov4africa.api_gateway.model.IShopLoginResponse> ishopMono = iShopService.login(new IShopLoginRequest(email, password));
-
-        return Mono.zip(ipayMono, ishopMono)
-            .flatMap(tuple -> {
-                AuthResult authResult = tuple.getT1();
-                com.innov4africa.api_gateway.model.IShopLoginResponse ishopResponse = tuple.getT2();
-
-                // Vérifier le succès iPay
-                if (!authResult.isSuccess()) {
-                    return Mono.just(buildErrorResponse(authResult.getMessage()));
+        // D'abord vérifier iPay seul
+        return ipayService.authenticate(email, password)
+            .flatMap(initialAuthResult -> {
+                if (isSessionEnCours(initialAuthResult)) {
+                    logger.info("Session en cours détectée pour {}, forçage déconnexion/reconnexion", email);
+                    return forceDisconnectAndReconnect(initialAuthResult.getToken(), email, password)
+                        .flatMap(newAuthResult -> processAuthentication(email, password, newAuthResult));
+                } else {
+                    return processAuthentication(email, password, initialAuthResult);
                 }
+            });
+    }
 
+    private Mono<AuthResponse> processAuthentication(String email, String password, AuthResult ipayResult) {
+        if (!ipayResult.isSuccess()) {
+            return Mono.just(buildErrorResponse(ipayResult.getMessage()));
+        }
+
+        // Lancer iShop après la confirmation iPay
+        return iShopService.login(new IShopLoginRequest(email, password))
+            .flatMap(ishopResponse -> {
                 boolean ishopSuccess = ishopResponse != null && "success".equalsIgnoreCase(ishopResponse.getStatus());
                 boolean isSeller = ishopSuccess && ishopResponse.getUser_type() != null && "Seller".equalsIgnoreCase(ishopResponse.getUser_type());
 
-                String ipayToken = authResult.getToken();
-                String telephone = authResult.getTelephone();
-                String userId = authResult.getIduser();
-                // String ipayAccountId = authResult.
+                String ipayToken = ipayResult.getToken();
+                String telephone = ipayResult.getTelephone();
+                String userId = ipayResult.getIduser();
 
                 // Sauvegarder la session iPay
                 if (ipayToken != null && (userId != null || telephone != null)) {
@@ -84,15 +89,15 @@ public class AuthService {
                     services.add(new ServiceStatus("i-shop", false, ishopMsg));
                 }
 
-                // Vérifier/créer e-banking (en asynchrone, mais attendre pour la réponse)
+                // Vérifier/créer e-banking
                 return iBankingService.verifyUserExists(email, telephone)
                     .flatMap(existsInIBanking -> {
                         if (!existsInIBanking) {
                             return iBankingService.createUser(
                                 email,
                                 telephone,
-                                authResult.getPrenom(),
-                                authResult.getNom(),
+                                ipayResult.getPrenom(),
+                                ipayResult.getNom(),
                                 password
                             ).flatMap(created -> {
                                 services.add(new ServiceStatus("i-banking", created, created ? "Compte iBanking créé avec succès" : "Échec de la création du compte iBanking"));
@@ -110,7 +115,7 @@ public class AuthService {
                     });
             })
             .onErrorResume(e -> {
-                logger.error("Erreur technique lors de l'authentification SSO", e);
+                logger.error("Erreur technique lors de l'authentification iShop", e);
                 return Mono.just(buildErrorResponse("Erreur technique: " + e.getMessage()));
             });
     }
@@ -225,5 +230,25 @@ public class AuthService {
         services.add(new ServiceStatus("i-banking", false, "Service non disponible"));
         services.add(new ServiceStatus("i-shop", false, "Service non disponible"));
         return new AuthResponse("error", message, null, services);
+    }
+
+    private boolean isSessionEnCours(AuthResult authResult) {
+        return authResult.getMessage() != null && 
+               authResult.getMessage().contains("session en cours") &&
+               authResult.getToken() != null;
+    }
+
+    private Mono<AuthResult> forceDisconnectAndReconnect(String existingToken, String email, String password) {
+        return ipayService.deconnexionUser(existingToken)
+            .flatMap(deconnectResponse -> {
+                logger.info("Déconnexion forcée effectuée pour: {}", email);
+                return Mono.delay(java.time.Duration.ofMillis(1500))
+                    .then(ipayService.authenticate(email, password));
+            })
+            .onErrorResume(e -> {
+                logger.error("Erreur lors de la déconnexion forcée", e);
+                return Mono.delay(java.time.Duration.ofMillis(1500))
+                    .then(ipayService.authenticate(email, password));
+            });
     }
 }

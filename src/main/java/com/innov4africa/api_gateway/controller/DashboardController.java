@@ -1,20 +1,26 @@
 package com.innov4africa.api_gateway.controller;
 
-import com.innov4africa.api_gateway.model.GlobalBalanceResponse;
-import com.innov4africa.api_gateway.model.ServiceStatus;
-import com.innov4africa.api_gateway.service.AggregationService;
-import com.innov4africa.api_gateway.service.JwtUtil;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.innov4africa.api_gateway.model.GlobalBalanceResponse;
+import com.innov4africa.api_gateway.model.ServiceStatus;
+import com.innov4africa.api_gateway.service.AggregationService;
+import com.innov4africa.api_gateway.service.JwtUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import reactor.core.publisher.Mono;
-import java.util.List;
 
 @RestController
 @RequestMapping("/dashboard")
@@ -46,30 +52,14 @@ public class DashboardController {
         // 1. Vérifier la présence du header Authorization
         if (authHeader == null || authHeader.isBlank()) {
             logger.warn("Tentative d'accès sans header Authorization");            return Mono.just(ResponseEntity.status(401).body(
-                new GlobalBalanceResponse(
-                    "error",
-                    "Token d'authentification manquant",
-                    "0.00", // totalMontant
-                    "0.00", // montantIPay
-                    "0.00", // montantIBanking
-                    List.of(new ServiceStatus("i-pay", false, "Non autorisé"),
-                           new ServiceStatus("i-banking", false, "Non autorisé"))
-                )
+                GlobalBalanceResponse.authError("Token d'authentification manquant", "Token manquant")
             ));
         }
 
         // 2. Vérifier le format Bearer
         if (!authHeader.startsWith("Bearer ")) {
             logger.warn("Format de token invalide: {}", authHeader);            return Mono.just(ResponseEntity.status(401).body(
-                new GlobalBalanceResponse(
-                    "error",
-                    "Format de token invalide",
-                    "0.00", // totalMontant
-                    "0.00", // montantIPay
-                    "0.00", // montantIBanking
-                    List.of(new ServiceStatus("i-pay", false, "Non autorisé"),
-                           new ServiceStatus("i-banking", false, "Non autorisé"))
-                )
+                GlobalBalanceResponse.authError("Format de token invalide", "Format de token invalide")
             ));
         }
 
@@ -78,47 +68,36 @@ public class DashboardController {
         // 3. Valider le token JWT
         if (!jwtUtil.validateToken(jwt)) {
             logger.warn("Token JWT invalide ou expiré");            return Mono.just(ResponseEntity.status(401).body(
-                new GlobalBalanceResponse(
-                    "error",
-                    "Token invalide ou expiré",
-                    "0.00", // totalMontant
-                    "0.00", // montantIPay
-                    "0.00", // montantIBanking
-                    List.of(new ServiceStatus("i-pay", false, "Non autorisé"),
-                           new ServiceStatus("i-banking", false, "Non autorisé"))
-                )
+                GlobalBalanceResponse.authError("Token invalide ou expiré", "Token invalide ou expiré")
             ));
-        }        // 4. Extraire les claims nécessaires
+        }
+
+        // 4. Extraire les claims nécessaires
         String telephone = jwtUtil.extractTelephone(jwt);
         String email = jwtUtil.extractEmail(jwt);
         String ipayToken = jwtUtil.extractIpayToken(jwt);
 
+
         if (telephone == null || ipayToken == null || email == null) {
             logger.warn("Token ne contient pas les claims requis - telephone: {}, email: {}, ipayToken: {}", 
                       telephone, email, ipayToken);            return Mono.just(ResponseEntity.status(401).body(
-                new GlobalBalanceResponse(
-                    "error",
-                    "Token incomplet",
-                    "0.00", // totalMontant
-                    "0.00", // montantIPay
-                    "0.00", // montantIBanking
-                    List.of(new ServiceStatus("i-pay", false, "Non autorisé"),
-                           new ServiceStatus("i-banking", false, "Non autorisé"))
-                )
+                GlobalBalanceResponse.authError("Token incomplet", "Token incomplet")
             ));
-        }        // 5. Appeler le service d'agrégation
+        }
+
+        // 5. Appeler le service d'agrégation
         return aggregationService.getGlobalBalance(telephone, email, ipayToken)
             .map(ResponseEntity::ok)
             .onErrorResume(e -> {
-                logger.error("Erreur lors de la récupération du solde global", e);                return Mono.just(ResponseEntity.internalServerError().body(
+                logger.error("Erreur lors de la récupération du solde global", e);
+                return Mono.just(ResponseEntity.internalServerError().body(
                     new GlobalBalanceResponse(
                         "error",
                         "Erreur technique",
-                        "0.00", // totalMontant
-                        "0.00", // montantIPay
-                        "0.00", // montantIBanking
-                        List.of(new ServiceStatus("i-pay", false, "Service indisponible"),
-                               new ServiceStatus("i-banking", false, "Service indisponible"))
+                        null,
+                        null,
+                        null,
+                        List.of(new ServiceStatus("service", false, "Service temporairement indisponible"))
                     )
                 ));
             });

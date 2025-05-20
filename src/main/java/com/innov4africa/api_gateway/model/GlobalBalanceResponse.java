@@ -1,10 +1,12 @@
 package com.innov4africa.api_gateway.model;
 
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * Classe représentant la réponse HTTP pour le solde global (iPay + iBanking)
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)  // Ne pas inclure les champs null dans la réponse JSON
 public class GlobalBalanceResponse {
     private String status;
     private String message;
@@ -14,6 +16,15 @@ public class GlobalBalanceResponse {
     private List<ServiceStatus> serviceStatuses;
 
     public GlobalBalanceResponse() {
+    }
+
+    // Constructeur pour les erreurs d'authentification - n'inclut que les champs nécessaires
+    public static GlobalBalanceResponse authError(String message, String serviceMessage) {
+        GlobalBalanceResponse response = new GlobalBalanceResponse();
+        response.setStatus("error");
+        response.setMessage(message);
+        response.setServiceStatuses(List.of(new ServiceStatus("auth", false, serviceMessage)));
+        return response;
     }
 
     public GlobalBalanceResponse(String status, String message, String totalMontant, 
