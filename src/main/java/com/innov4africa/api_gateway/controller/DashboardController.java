@@ -74,8 +74,9 @@ public class DashboardController {
 
         // 4. Extraire les claims nécessaires
         String telephone = jwtUtil.extractTelephone(jwt);
-        String email = jwtUtil.extractEmail(jwt);
         String ipayToken = jwtUtil.extractIpayToken(jwt);
+        String email = jwtUtil.extractUsername(jwt);
+
 
 
         if (telephone == null || ipayToken == null || email == null) {

@@ -36,21 +36,34 @@ public class AggregationService {
     private IBankingService iBankingService;
     
     @Autowired
-    private RedisTemplate<String, String> redisTemplate;/**
+    private RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+    private InMemoryBalanceCache memoryCache;
+
+    /**
      * Agrège les soldes de iPay et iBanking pour un utilisateur
-     */    public Mono<GlobalBalanceResponse> getGlobalBalance(String telephone, String email, String ipayToken) {
+     */
+    public Mono<GlobalBalanceResponse> getGlobalBalance(String telephone, String email, String ipayToken) {
         String cacheKey = CACHE_KEY_PREFIX + telephone + ":" + email;
         
-        // Vérifier le cache d'abord
-        String cachedValue = redisTemplate.opsForValue().get(cacheKey);
-        if (cachedValue != null) {
-            try {
-                logger.info("Utilisation du cache pour le solde global - telephone: {}", telephone);
+        // Essayer d'abord Redis
+        GlobalBalanceResponse cachedBalance = null;
+        try {
+            String cachedValue = redisTemplate.opsForValue().get(cacheKey);
+            if (cachedValue != null) {
+                logger.info("Utilisation du cache Redis pour le solde global - telephone: {}", telephone);
                 ObjectMapper mapper = new ObjectMapper();
-                return Mono.just(mapper.readValue(cachedValue, GlobalBalanceResponse.class));
-            } catch (Exception e) {
-                logger.warn("Erreur lors de la lecture du cache", e);
+                cachedBalance = mapper.readValue(cachedValue, GlobalBalanceResponse.class);
             }
+        } catch (Exception e) {
+            logger.warn("Redis indisponible: {}", e.getMessage());
+            // Si Redis est down, essayer le cache en mémoire
+            cachedBalance = memoryCache.get(telephone, email);
+        }
+
+        if (cachedBalance != null) {
+            return Mono.just(cachedBalance);
         }
 
         List<ServiceStatus> services = new ArrayList<>();
@@ -73,12 +86,26 @@ public class AggregationService {
                 var xpath = XPathFactory.newInstance().newXPath();
                 String error = xpath.evaluate("//return/error", doc);
                 String message = xpath.evaluate("//return/message", doc);
-                
+
                 if (!"0".equals(error)) {
                     services.add(new ServiceStatus("i-pay", false, message));
                 } else {
                     montantIPay = xpath.evaluate("//return/montant", doc);
-                    services.add(new ServiceStatus("i-pay", true, "Solde récupéré"));
+                    // Vérifier si le montant est valide et non nul
+                    boolean montantValide = montantIPay != null && 
+                                          !montantIPay.equals("0.00") && 
+                                          !montantIPay.equals("0,00") &&
+                                          !montantIPay.trim().isEmpty();
+                    
+                    services.add(new ServiceStatus(
+                        "i-pay", 
+                        montantValide, 
+                        montantValide ? "Solde récupéré" : "Solde nul ou invalide"
+                    ));
+                    
+                    if (!montantValide) {
+                        montantIPay = "0.00";
+                    }
                 }
 
                 // Traiter la réponse iBanking
@@ -93,46 +120,52 @@ public class AggregationService {
                 double total = Double.parseDouble(montantIPay.replace(",", ".")) 
                             + Double.parseDouble(montantIBanking.replace(",", "."));
                 
-                return Mono.just(new GlobalBalanceResponse(
+                GlobalBalanceResponse response = new GlobalBalanceResponse(
                     "success",
                     "Solde global récupéré",
                     String.format("%.2f", total),
-                    montantIPay,                    montantIBanking,
+                    montantIPay,
+                    montantIBanking,
                     services
-                )).doOnSuccess(response -> {
-                    try {
-                        // Mettre en cache la réponse
-                        ObjectMapper mapper = new ObjectMapper();
-                        String jsonValue = mapper.writeValueAsString(response);
-                        redisTemplate.opsForValue().set(cacheKey, jsonValue, CACHE_TTL_SECONDS, TimeUnit.SECONDS);
-                    } catch (Exception e) {
-                        logger.warn("Erreur lors de la mise en cache", e);
-                    }
-                });
+                );
+
+                // Essayer de mettre en cache Redis
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    String jsonValue = mapper.writeValueAsString(response);
+                    redisTemplate.opsForValue().set(cacheKey, jsonValue, CACHE_TTL_SECONDS, TimeUnit.SECONDS);
                 } catch (Exception e) {
-                    logger.error("Erreur de traitement de la réponse iPay", e);
-                    return Mono.just(new GlobalBalanceResponse(
-                        "error",
-                        "Erreur technique",
-                        "0.00",
-                        "0.00",
-                        "0.00",
-                        List.of(new ServiceStatus("i-pay", false, "Erreur de traitement"),
-                               new ServiceStatus("i-banking", false, "Service en cours d'implémentation"))
-                    ));
+                    logger.warn("Impossible de mettre en cache Redis: {}", e.getMessage());
+                    // Utiliser le cache en mémoire comme fallback
+                    memoryCache.store(telephone, email, response);
                 }
-            })
-            .onErrorResume(e -> {
-                logger.error("Erreur lors de la récupération des soldes", e);
+
+                return Mono.just(response);
+
+            } catch (Exception e) {
+                logger.error("Erreur de traitement de la réponse iPay", e);
                 return Mono.just(new GlobalBalanceResponse(
                     "error",
-                    "Service indisponible",
+                    "Erreur technique",
                     "0.00",
                     "0.00",
                     "0.00",
-                    List.of(new ServiceStatus("i-pay", false, "Service indisponible"),
+                    List.of(new ServiceStatus("i-pay", false, "Erreur de traitement"),
                            new ServiceStatus("i-banking", false, "Service en cours d'implémentation"))
                 ));
-            });
+            }
+        })
+        .onErrorResume(e -> {
+            logger.error("Erreur lors de la récupération des soldes", e);
+            return Mono.just(new GlobalBalanceResponse(
+                "error",
+                "Service indisponible",
+                "0.00",
+                "0.00",
+                "0.00",
+                List.of(new ServiceStatus("i-pay", false, "Service indisponible"),
+                       new ServiceStatus("i-banking", false, "Service en cours d'implémentation"))
+            ));
+        });
     }
 }
