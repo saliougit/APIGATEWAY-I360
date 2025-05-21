@@ -18,8 +18,7 @@
         <spring-cloud.version>2022.0.4</spring-cloud.version>
         <spring-ws.version>4.0.8</spring-ws.version>
     </properties>
-    <dependencies>
-        <!-- SpringDoc OpenAPI UI -->
+    <dependencies>        <!-- OpenAPI/Swagger Dependencies -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -29,6 +28,16 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
             <version>2.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-webflux-core</artifactId>
+            <version>1.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>2.2.20</version>
         </dependency>
 
         <dependency>
