@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.innov4africa.api_gateway.model.AuthRequest;
 import com.innov4africa.api_gateway.model.AuthResponse;
 import com.innov4africa.api_gateway.model.IShopInfo;
-import com.innov4africa.api_gateway.model.JwtInfoResponse;
 import com.innov4africa.api_gateway.model.LogoutResponse;
 import com.innov4africa.api_gateway.model.ServiceStatus;
 import com.innov4africa.api_gateway.service.AuthService;
@@ -51,42 +50,6 @@ public class AuthController {
                 }
             });
     }
-
-    //     @Operation(summary = "Extraire les infos du token JWT",
-    //         description = "Renvoie les informations contenues dans le token JWT")
-    // @GetMapping("/extract-jwt-info")
-    // public ResponseEntity<JwtInfoResponse> extractJwtInfo(
-    //     @RequestHeader("Authorization") String authHeader) {
-        
-    //     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-    //         return ResponseEntity.badRequest().body(new JwtInfoResponse("error", "Token manquant ou invalide"));
-    //     }
-        
-    //     String token = authHeader.substring(7);
-        
-    //     if (!jwtUtil.validateToken(token)) {
-    //         return ResponseEntity.status(401).body(new JwtInfoResponse("error", "Token invalide ou expiré"));
-    //     }
-        
-    //     try {
-    //         JwtInfoResponse response = new JwtInfoResponse();
-    //         response.setStatus("success");
-    //         response.setEmail(jwtUtil.extractUsername(token));
-    //         response.setTelephone(jwtUtil.extractTelephone(token));
-    //         response.setUserId(jwtUtil.extractUserId(token));
-    //         response.setSeller(jwtUtil.extractUserType(token) != null && 
-    //                         jwtUtil.extractUserType(token).equalsIgnoreCase("Seller"));
-            
-    //         if (response.isSeller()) {
-    //              ishopInfo = jwtUtil.extractIShopInfo(token);
-    //             response.setIshopInfo(ishopInfo);
-    //         }
-            
-    //         return ResponseEntity.ok(response);
-    //     } catch (Exception e) {
-    //         return ResponseEntity.status(500).body(new JwtInfoResponse("error", "Erreur lors de l'extraction du token"));
-    //     }
-    // }
         @Operation(summary = "Extraire toutes les infos du token JWT",
         description = "Renvoie toutes les informations contenues dans le token JWT")
     @GetMapping("/extract-jwt-info")
